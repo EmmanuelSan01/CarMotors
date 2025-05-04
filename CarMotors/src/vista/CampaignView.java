@@ -29,7 +29,7 @@ public class CampaignView extends JFrame {
         CampaignController controller = new CampaignController();
         java.util.List<Campana> campanas = controller.getAllCampanas();
 
-        String[] columnas = {"ID", "Nombre", "Descripción", "Fecha Inicio", "Fecha Fin", "Estado"};
+        String[] columnas = {"ID", "Nombre", "Descripción", "Fecha Inicio", "Fecha Fin"};
         Object[][] datos = new Object[campanas.size()][columnas.length];
 
         for (int i = 0; i < campanas.size(); i++) {
@@ -39,7 +39,6 @@ public class CampaignView extends JFrame {
             datos[i][2] = c.getDescripcion();
             datos[i][3] = c.getFechaInicio();
             datos[i][4] = c.getFechaFin();
-            datos[i][5] = c.getEstado();
         }
 
         JTable tabla = new JTable(datos, columnas);

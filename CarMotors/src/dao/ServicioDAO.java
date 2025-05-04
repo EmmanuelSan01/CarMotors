@@ -69,7 +69,7 @@ public class ServicioDAO {
                     System.out.println("Bytes de estado: " + toHex(estadoStr));
                     estadoStr = estadoStr.trim();
                     System.out.println("Valor después de trim: '" + estadoStr + "' (length: " + estadoStr.length() + ")");
-                    EstadoServicio estado = EstadoServicio.valueOf(estadoStr.toUpperCase());
+                    EstadoServicio estado = EstadoServicio.valueOf(estadoStr.toUpperCase().replace(" ", "_"));
                     System.out.println("Valor normalizado de estado: '" + estado + "' (length: " + estado.toString().length() + ")");
 
                     Servicio servicio = new Servicio(
@@ -107,7 +107,8 @@ public class ServicioDAO {
             stmt.setString(4, servicio.getDescripcion());
             stmt.setInt(5, servicio.getTiempoEstimado());
             stmt.setDouble(6, servicio.getCostoManoObra());
-            stmt.setString(7, servicio.getEstado().name());
+            stmt.setString(7, servicio.getEstado().name().substring(0, 1).toUpperCase() +
+                servicio.getEstado().name().substring(1).toLowerCase().replace("_", " "));
             stmt.setDate(8, java.sql.Date.valueOf(servicio.getFechaInicio()));
             if (servicio.getFechaFin() != null) {
                 stmt.setDate(9, java.sql.Date.valueOf(servicio.getFechaFin()));

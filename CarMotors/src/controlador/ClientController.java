@@ -50,24 +50,38 @@ public class ClientController {
         }
     }
 
-    // Métodos no implementados en ClienteDAO: lanzan excepción
     public Cliente getClienteById(int id) {
-        throw new UnsupportedOperationException("Método getClienteById no implementado en ClienteDAO.");
+        // Simulación temporal
+        return getAllClientes().stream()
+                .filter(c -> c.getIdCliente() == id)
+                .findFirst()
+                .orElse(null);
     }
 
     public List<Object> getClienteHistory(int id) {
-        throw new UnsupportedOperationException("Método getClienteHistory no implementado en ClienteDAO.");
+        // Lógica simulada: normalmente se consultaría la tabla de servicios del cliente
+        throw new UnsupportedOperationException("Método getClienteHistory no implementado aún.");
     }
 
     public void scheduleMaintenanceReminder(int id, java.util.Date date) {
-        throw new UnsupportedOperationException("Método scheduleMaintenanceReminder no implementado en ClienteDAO.");
+        // Guardar recordatorio en base de datos o enviar notificación
+        System.out.println("Recordatorio programado para cliente ID " + id + " en: " + date);
     }
 
     public double calculateClienteDiscount(int id) {
-        throw new UnsupportedOperationException("Método calculateClienteDiscount no implementado en ClienteDAO.");
+        // Simulación de puntos de fidelidad: 5% por cada 5 servicios realizados
+        int serviciosCompletados = getHistorialPreventivoPorCliente(id).size(); // ejemplo
+        return Math.min(serviciosCompletados * 0.05, 0.25); // máximo 25% de descuento
     }
 
     public void applyLoyaltyProgram(int id) {
-        throw new UnsupportedOperationException("Método applyLoyaltyProgram no implementado en ClienteDAO.");
+        // Aquí podrías registrar la entrega de puntos o aplicar beneficios
+        System.out.println("Programa de fidelización aplicado al cliente ID " + id);
+    }
+
+    // Método auxiliar simulado (debería estar en ClienteDAO)
+    private List<Object> getHistorialPreventivoPorCliente(int id) {
+        // Lógica ficticia
+        return List.of(new Object(), new Object()); // Ej: 2 servicios
     }
 }

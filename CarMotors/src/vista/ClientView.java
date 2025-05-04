@@ -44,7 +44,33 @@ public class ClientView extends JFrame {
         JTable tabla = new JTable(datos, columnas);
         JScrollPane scrollPane = new JScrollPane(tabla);
 
-        getContentPane().add(scrollPane);
+        JButton btnRecordatorio = new JButton("Programar Recordatorio");
+        btnRecordatorio.addActionListener(e -> {
+            int fila = tabla.getSelectedRow();
+            if (fila >= 0) {
+                int id = (int) tabla.getValueAt(fila, 0);
+                controller.scheduleMaintenanceReminder(id, new java.util.Date()); // ahora
+                JOptionPane.showMessageDialog(this, "Recordatorio programado.");
+            }
+        });
+
+        JButton btnDescuento = new JButton("Calcular Descuento");
+        btnDescuento.addActionListener(e -> {
+            int fila = tabla.getSelectedRow();
+            if (fila >= 0) {
+                int id = (int) tabla.getValueAt(fila, 0);
+                double descuento = controller.calculateClienteDiscount(id);
+                JOptionPane.showMessageDialog(this, "Descuento estimado: " + (descuento * 100) + "%");
+            }
+        });
+
+        JPanel panelInferior = new JPanel();
+        panelInferior.add(btnRecordatorio);
+        panelInferior.add(btnDescuento);
+
+        getContentPane().add(scrollPane, "Center");
+        getContentPane().add(panelInferior, "South");
+
         revalidate();
         repaint();
     }

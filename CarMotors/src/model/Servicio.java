@@ -23,8 +23,9 @@ public class Servicio {
     private LocalDate fechaFin;
 
     public enum EstadoServicio {
-        PENDIENTE, EN_PROCESO, COMPLETADO, CANCELADO
+        PENDIENTE, EN_PROCESO, COMPLETADO, ENTREGADO, CANCELADO
     }
+
     
     public Servicio(int idServicio) {
         this.idServicio = idServicio;

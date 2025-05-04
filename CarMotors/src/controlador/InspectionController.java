@@ -15,8 +15,9 @@ import java.util.Date;
  * Autor: Emmanuel
  */
 public class InspectionController {
+
     private InspeccionDAO dao = new InspeccionDAO();
-    
+
     public List<Inspeccion> getAllInspeccions() {
         return dao.getAll();
     }
@@ -26,7 +27,11 @@ public class InspectionController {
     }
 
     public void createInspeccion(Inspeccion inspection) {
-        throw new UnsupportedOperationException("insert() no implementado en InspeccionDAO.");
+        // Programar automáticamente seguimiento en 6 meses si fue aprobada
+        if (inspection.getResultado() == Inspeccion.ResultadoInspeccion.APROBADO) {
+            inspection.setFechaProxima(inspection.getFechaInspeccion().plusMonths(6));
+        }
+        dao.insert(inspection);
     }
 
     public void updateInspeccionResult(int id, String result) {

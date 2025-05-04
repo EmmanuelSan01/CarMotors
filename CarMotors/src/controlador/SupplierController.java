@@ -55,10 +55,21 @@ public class SupplierController {
     }
 
     public void evaluateProveedor(int id, Object eval) {
-        throw new UnsupportedOperationException("evaluateProveedor no implementado en ProveedorDAO.");
+        try {
+            if (eval instanceof ProveedorDAO.EvaluacionProveedor ev) {
+                dao.evaluarProveedor(ev);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    public Object getProveedorPerformanceReport(int id) {
-        throw new UnsupportedOperationException("getProveedorPerformanceReport no implementado en ProveedorDAO.");
+    public String getProveedorPerformanceReport(int id) {
+        try {
+            return dao.obtenerReporteDesempeno(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Error al generar reporte.";
+        }
     }
 }

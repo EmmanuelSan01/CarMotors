@@ -5,6 +5,7 @@
 package vista;
 
 import controlador.InspectionController;
+import java.awt.BorderLayout;
 import javax.swing.*;
 
 /**
@@ -12,17 +13,30 @@ import javax.swing.*;
  * @author Emmanuel
  */
 public class InspectionView extends JFrame {
+    private JScrollPane scrollPane;
 
     public InspectionView() {
         setTitle("Inspecciones");
         setSize(600, 400);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        // Panel superior con botón
+        JPanel panelTop = new JPanel();
+        JButton btnNueva = new JButton("Nueva inspección");
+        btnNueva.addActionListener(e -> showNewInspectionForm());
+        panelTop.add(btnNueva);
+        add(panelTop, BorderLayout.NORTH);
+
+        // Panel central con la tabla
         showInspectionsList();
     }
 
     public void showInspectionsList() {
-        getContentPane().removeAll();
+        if (scrollPane != null) {
+            getContentPane().remove(scrollPane);
+        }
 
         InspectionController controller = new InspectionController();
         java.util.List<model.Inspeccion> inspecciones = controller.getAllInspeccions();
@@ -41,15 +55,40 @@ public class InspectionView extends JFrame {
         }
 
         JTable tabla = new JTable(datos, columnas);
-        JScrollPane scrollPane = new JScrollPane(tabla);
+        scrollPane = new JScrollPane(tabla);
 
-        getContentPane().add(scrollPane);
+        getContentPane().add(scrollPane, BorderLayout.CENTER);
         revalidate();
         repaint();
     }
 
     public void showNewInspectionForm() {
-        JOptionPane.showMessageDialog(this, "Formulario de nueva inspección (pendiente)");
+        try {
+            int servicioId = Integer.parseInt(JOptionPane.showInputDialog(this, "ID del servicio:"));
+            int tecnicoId = Integer.parseInt(JOptionPane.showInputDialog(this, "ID del técnico:"));
+            String tipo = JOptionPane.showInputDialog(this, "Tipo de inspección:");
+            String resultadoStr = JOptionPane.showInputDialog(this, "Resultado (Aprobado / Requiere reparaciones / Rechazado):");
+
+            model.Inspeccion.ResultadoInspeccion resultado
+                    = model.Inspeccion.ResultadoInspeccion.valueOf(resultadoStr.toUpperCase().replace(" ", "_"));
+
+            model.Inspeccion nueva = new model.Inspeccion(
+                    0,
+                    new model.Servicio(servicioId),
+                    new model.Tecnico(tecnicoId),
+                    tipo,
+                    java.time.LocalDate.now(),
+                    resultado,
+                    null
+            );
+
+            new InspectionController().createInspeccion(nueva);
+            JOptionPane.showMessageDialog(this, "Inspección registrada.");
+            refreshInspectionsList();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al registrar inspección: " + ex.getMessage());
+        }
     }
 
     public void refreshInspectionsList() {

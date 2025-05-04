@@ -6,6 +6,7 @@ package controlador;
 
 import model.Campana;
 import dao.CampanaDAO;
+import java.util.List;
 
 /**
  *
@@ -20,5 +21,5 @@ public class CampaignController {
     public void updateCampana(Campana campaign) { dao.update(campaign); }
     public void deleteCampana(int id) { dao.delete(id); }
     public void assignClientsAutomatically(int id, String criteria) { dao.assignClients(id, criteria); }
-    public Report generateCampanaReport(int id) { return dao.generateReport(id); }
+    public String generateCampanaReport(int id) { return dao.generateReport(id); }
 }

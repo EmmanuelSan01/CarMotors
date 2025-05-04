@@ -24,6 +24,8 @@ public class ServiceView extends JFrame {
     }
 
     public void showServicesList() {
+        getContentPane().removeAll();
+
         ServiceController controller = new ServiceController();
         java.util.List<Servicio> servicios = controller.getAllServices();
 
@@ -43,12 +45,36 @@ public class ServiceView extends JFrame {
         JTable tabla = new JTable(datos, columnas);
         JScrollPane scrollPane = new JScrollPane(tabla);
 
-        this.getContentPane().removeAll(); // Limpiar contenido anterior
-        this.getContentPane().add(scrollPane);
-        this.revalidate();
-        this.repaint();
+        JButton avanzarEstado = new JButton("Avanzar Estado");
+        avanzarEstado.addActionListener(e -> {
+            int fila = tabla.getSelectedRow();
+            if (fila >= 0) {
+                int id = (int) tabla.getValueAt(fila, 0);
+                String estadoActual = (String) tabla.getValueAt(fila, 3);
+
+                String nuevoEstado = switch (estadoActual) {
+                    case "PENDIENTE" -> "EN_PROCESO";
+                    case "EN_PROCESO" -> "COMPLETADO";
+                    default -> estadoActual;
+                };
+
+                if (!estadoActual.equals(nuevoEstado)) {
+                    controller.updateServiceStatus(id, nuevoEstado);
+                    refreshServicesList();
+                }
+            }
+        });
+
+        JPanel panelInferior = new JPanel();
+        panelInferior.add(avanzarEstado);
+
+        getContentPane().add(scrollPane, "Center");
+        getContentPane().add(panelInferior, "South");
+
+        revalidate();
+        repaint();
     }
-    
+
     public void showNewServiceForm() {
         JOptionPane.showMessageDialog(this, "Formulario para registrar un nuevo servicio (pendiente)");
     }

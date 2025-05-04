@@ -13,8 +13,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
-
 /**
  *
  * @author Emmanuel
@@ -25,19 +23,17 @@ public class InspeccionDAO {
         List<Inspeccion> lista = new ArrayList<>();
         String sql = "SELECT * FROM inspeccion";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
                 Inspeccion ins = new Inspeccion(
-                    rs.getInt("id_inspeccion"),
-                    new Servicio(rs.getInt("id_servicio")),   // requiere constructor simplificado
-                    new Tecnico(rs.getInt("id_tecnico")),     // requiere constructor simplificado
-                    rs.getString("tipo_inspeccion"),
-                    rs.getDate("fecha_inspeccion").toLocalDate(),
-                    Inspeccion.ResultadoInspeccion.valueOf(rs.getString("resultado").toUpperCase().replace(" ", "_")),
-                    rs.getDate("fecha_proxima") != null ? rs.getDate("fecha_proxima").toLocalDate() : null
+                        rs.getInt("id_inspeccion"),
+                        new Servicio(rs.getInt("id_servicio")), // requiere constructor simplificado
+                        new Tecnico(rs.getInt("id_tecnico")), // requiere constructor simplificado
+                        rs.getString("tipo_inspeccion"),
+                        rs.getDate("fecha_inspeccion").toLocalDate(),
+                        Inspeccion.ResultadoInspeccion.valueOf(rs.getString("resultado").toUpperCase().replace(" ", "_")),
+                        rs.getDate("fecha_proxima") != null ? rs.getDate("fecha_proxima").toLocalDate() : null
                 );
                 lista.add(ins);
             }
@@ -47,5 +43,25 @@ public class InspeccionDAO {
         }
 
         return lista;
+    }
+
+    public void insert(Inspeccion ins) {
+        String sql = "INSERT INTO inspeccion (id_servicio, id_tecnico, tipo_inspeccion, fecha_inspeccion, resultado, fecha_proxima) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, ins.getServicio().getIdServicio());
+            stmt.setInt(2, ins.getTecnico().getIdTecnico());
+            stmt.setString(3, ins.getTipoInspeccion());
+            stmt.setDate(4, Date.valueOf(ins.getFechaInspeccion()));
+            stmt.setString(5, ins.getResultado().name().replace("_", " "));
+            if (ins.getFechaProxima() != null) {
+                stmt.setDate(6, Date.valueOf(ins.getFechaProxima()));
+            } else {
+                stmt.setNull(6, Types.DATE);
+            }
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

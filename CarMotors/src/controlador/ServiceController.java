@@ -51,28 +51,41 @@ public class ServiceController {
         }
     }
 
-    // Métodos no implementados en DAO: se marcan con advertencia
     public Servicio getServiceById(int serviceId) {
-        throw new UnsupportedOperationException("Método getServiceById no implementado en ServicioDAO.");
+        return getAllServices().stream()
+            .filter(s -> s.getIdServicio() == serviceId)
+            .findFirst()
+            .orElse(null);
     }
 
     public void updateServiceStatus(int serviceId, String status) {
-        throw new UnsupportedOperationException("Método updateServiceStatus no implementado en ServicioDAO.");
+        try {
+            Servicio servicio = getServiceById(serviceId);
+            if (servicio != null) {
+                servicio.setEstado(Servicio.EstadoServicio.valueOf(status.toUpperCase()));
+                if (status.equalsIgnoreCase("COMPLETADO")) {
+                    servicio.setFechaFin(java.time.LocalDate.now());
+                }
+                dao.actualizarServicio(servicio);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void assignTechnician(int serviceId, int technicianId) {
-        throw new UnsupportedOperationException("Método assignTechnician no implementado en ServicioDAO.");
-    }
-
-    public void recordUsedParts(int serviceId, List<Object> parts) {
-        throw new UnsupportedOperationException("Método recordUsedParts no implementado en ServicioDAO.");
+        try {
+            Servicio servicio = getServiceById(serviceId);
+            if (servicio != null) {
+                servicio.setIdTecnico(technicianId);
+                dao.actualizarServicio(servicio);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void markServiceComplete(int serviceId) {
-        throw new UnsupportedOperationException("Método markServiceComplete no implementado en ServicioDAO.");
-    }
-
-    public List<String> getServiceTypes() {
-        return Arrays.asList("Mecánico", "Eléctrico", "Diagnóstico", "General");
+        updateServiceStatus(serviceId, "COMPLETADO");
     }
 }

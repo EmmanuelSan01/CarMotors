@@ -27,8 +27,7 @@ public class RepuestoDAO {
 
     public void agregarRepuesto(Repuesto repuesto) throws SQLException {
         String sql = "INSERT INTO repuesto (nombre, tipo, marca, modelo, id_proveedor, cantidad_stock, nivel_minimo, fecha_ingreso, vida_util_meses, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, repuesto.getNombre());
             stmt.setString(2, repuesto.getTipo().name());
             stmt.setString(3, repuesto.getMarca() != null ? repuesto.getMarca().name() : null);
@@ -50,9 +49,7 @@ public class RepuestoDAO {
     public List<Repuesto> obtenerRepuestos() throws SQLException {
         List<Repuesto> repuestos = new ArrayList<>();
         String sql = "SELECT * FROM repuesto";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 try {
                     String tipoStr = rs.getString("tipo");
@@ -89,17 +86,17 @@ public class RepuestoDAO {
                     }
 
                     Repuesto repuesto = new Repuesto(
-                        rs.getInt("id_repuesto"),
-                        rs.getString("nombre"),
-                        tipo,
-                        marca,
-                        rs.getObject("modelo") != null ? rs.getInt("modelo") : null,
-                        new Proveedor(rs.getInt("id_proveedor")),
-                        rs.getInt("cantidad_stock"),
-                        rs.getInt("nivel_minimo"),
-                        rs.getDate("fecha_ingreso") != null ? rs.getDate("fecha_ingreso").toLocalDate() : null,
-                        rs.getInt("vida_util_meses"),
-                        estado
+                            rs.getInt("id_repuesto"),
+                            rs.getString("nombre"),
+                            tipo,
+                            marca,
+                            rs.getObject("modelo") != null ? rs.getInt("modelo") : null,
+                            new Proveedor(rs.getInt("id_proveedor")),
+                            rs.getInt("cantidad_stock"),
+                            rs.getInt("nivel_minimo"),
+                            rs.getDate("fecha_ingreso") != null ? rs.getDate("fecha_ingreso").toLocalDate() : null,
+                            rs.getInt("vida_util_meses"),
+                            estado
                     );
                     repuestos.add(repuesto);
                 } catch (Exception e) {
@@ -116,8 +113,7 @@ public class RepuestoDAO {
 
     public void actualizarRepuesto(Repuesto repuesto) throws SQLException {
         String sql = "UPDATE repuesto SET nombre = ?, tipo = ?, marca = ?, modelo = ?, id_proveedor = ?, cantidad_stock = ?, nivel_minimo = ?, fecha_ingreso = ?, vida_util_meses = ?, estado = ? WHERE id_repuesto = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, repuesto.getNombre());
             stmt.setString(2, repuesto.getTipo().name());
             stmt.setString(3, repuesto.getMarca() != null ? repuesto.getMarca().name() : null);
@@ -139,14 +135,45 @@ public class RepuestoDAO {
 
     public void eliminarRepuesto(int idRepuesto) throws SQLException {
         String sql = "DELETE FROM repuesto WHERE id_repuesto = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idRepuesto);
             int rowsAffected = stmt.executeUpdate();
             System.out.println("Repuesto eliminado, filas afectadas: " + rowsAffected);
         } catch (SQLException e) {
             System.err.println("Error al eliminar repuesto: " + e.getMessage());
             throw e;
+        }
+    }
+
+    public List<Repuesto> filterByType(String type) {
+        return safeFilter(r -> r.getTipo().name().equalsIgnoreCase(type));
+    }
+
+    public List<Repuesto> filterByBrand(String brand) {
+        return safeFilter(r -> r.getMarca() != null && r.getMarca().name().equalsIgnoreCase(brand));
+    }
+
+    public List<Repuesto> filterByStatus(String status) {
+        return safeFilter(r -> r.getEstado().name().replace("_", " ").equalsIgnoreCase(status));
+    }
+
+    private List<Repuesto> safeFilter(java.util.function.Predicate<Repuesto> condition) {
+        try {
+            return obtenerRepuestos().stream().filter(condition).toList();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return List.of();
+        }
+    }
+
+    public void reducirStock(int idRepuesto, int cantidadReducida) {
+        String sql = "UPDATE repuesto SET cantidad_stock = cantidad_stock - ? WHERE id_repuesto = ?";
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, cantidadReducida);
+            stmt.setInt(2, idRepuesto);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error al reducir stock: " + e.getMessage());
         }
     }
 }

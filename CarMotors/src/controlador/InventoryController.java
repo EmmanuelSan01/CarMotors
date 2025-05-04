@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
  * @author Emmanuel
  */
 public class InventoryController {
+
     private RepuestoDAO dao = new RepuestoDAO();
 
     public List<Repuesto> getAllRepuestos() {
@@ -76,9 +77,9 @@ public class InventoryController {
                 .collect(Collectors.toList());
     }
 
-    // Este método requiere implementar un método "reducirStock" en el DAO si se desea mantener
-    public void updateStockAfterServiceUse(List<Repuesto> usedRepuestos) {
-        System.err.println("Método updateStockAfterServiceUse no implementado completamente: falta lógica DAO.");
-        // Aquí puedes implementar lógica específica si decides agregar una función en el DAO.
+    public void updateStockAfterServiceUse(List<Repuesto> usados) {
+        for (Repuesto repuesto : usados) {
+            dao.reducirStock(repuesto.getIdRepuesto(), repuesto.getCantidadStock()); // cantidad usada
+        }
     }
 }
