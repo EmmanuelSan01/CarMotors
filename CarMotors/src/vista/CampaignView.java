@@ -4,6 +4,7 @@
  */
 package vista;
 
+import controlador.CampaignController;
 import model.Campana;
 
 import javax.swing.*;
@@ -23,8 +24,32 @@ public class CampaignView extends JFrame {
     }
 
     public void showCampanasList() {
-        JOptionPane.showMessageDialog(this, "Listado de campañas activas (pendiente)");
+        getContentPane().removeAll();
+
+        CampaignController controller = new CampaignController();
+        java.util.List<Campana> campanas = controller.getAllCampanas();
+
+        String[] columnas = {"ID", "Nombre", "Descripción", "Fecha Inicio", "Fecha Fin", "Estado"};
+        Object[][] datos = new Object[campanas.size()][columnas.length];
+
+        for (int i = 0; i < campanas.size(); i++) {
+            Campana c = campanas.get(i);
+            datos[i][0] = c.getIdCampana();
+            datos[i][1] = c.getNombre();
+            datos[i][2] = c.getDescripcion();
+            datos[i][3] = c.getFechaInicio();
+            datos[i][4] = c.getFechaFin();
+            datos[i][5] = c.getEstado();
+        }
+
+        JTable tabla = new JTable(datos, columnas);
+        JScrollPane scrollPane = new JScrollPane(tabla);
+
+        getContentPane().add(scrollPane);
+        revalidate();
+        repaint();
     }
+
 
     public void showNewCampanaForm() {
         JOptionPane.showMessageDialog(this, "Formulario para nueva campaña (pendiente)");

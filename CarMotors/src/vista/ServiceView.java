@@ -4,6 +4,7 @@
  */
 package vista;
 
+import controlador.ServiceController;
 import model.Servicio;
 
 import javax.swing.*;
@@ -23,9 +24,31 @@ public class ServiceView extends JFrame {
     }
 
     public void showServicesList() {
-        JOptionPane.showMessageDialog(this, "Lista de servicios activos o históricos (pendiente)");
-    }
+        ServiceController controller = new ServiceController();
+        java.util.List<Servicio> servicios = controller.getAllServices();
 
+        String[] columnas = {"ID", "Tipo", "Técnico", "Estado", "Fecha inicio", "Fecha fin"};
+        Object[][] datos = new Object[servicios.size()][columnas.length];
+
+        for (int i = 0; i < servicios.size(); i++) {
+            Servicio s = servicios.get(i);
+            datos[i][0] = s.getIdServicio();
+            datos[i][1] = s.getTipo();
+            datos[i][2] = s.getIdTecnico();
+            datos[i][3] = s.getEstado().name();
+            datos[i][4] = s.getFechaInicio();
+            datos[i][5] = s.getFechaFin() != null ? s.getFechaFin() : "—";
+        }
+
+        JTable tabla = new JTable(datos, columnas);
+        JScrollPane scrollPane = new JScrollPane(tabla);
+
+        this.getContentPane().removeAll(); // Limpiar contenido anterior
+        this.getContentPane().add(scrollPane);
+        this.revalidate();
+        this.repaint();
+    }
+    
     public void showNewServiceForm() {
         JOptionPane.showMessageDialog(this, "Formulario para registrar un nuevo servicio (pendiente)");
     }

@@ -4,6 +4,7 @@
  */
 package vista;
 
+import controlador.ClientController;
 import model.Cliente;
 
 import javax.swing.*;
@@ -23,7 +24,29 @@ public class ClientView extends JFrame {
     }
 
     public void showClientesList() {
-        JOptionPane.showMessageDialog(this, "Lista de clientes (pendiente)");
+        getContentPane().removeAll();
+
+        ClientController controller = new ClientController();
+        java.util.List<Cliente> clientes = controller.getAllClientes();
+
+        String[] columnas = {"ID", "Nombre", "Identificación", "Teléfono", "Correo"};
+        Object[][] datos = new Object[clientes.size()][columnas.length];
+
+        for (int i = 0; i < clientes.size(); i++) {
+            Cliente c = clientes.get(i);
+            datos[i][0] = c.getIdCliente();
+            datos[i][1] = c.getNombre();
+            datos[i][2] = c.getIdentificacion();
+            datos[i][3] = c.getTelefono();
+            datos[i][4] = c.getCorreo();
+        }
+
+        JTable tabla = new JTable(datos, columnas);
+        JScrollPane scrollPane = new JScrollPane(tabla);
+
+        getContentPane().add(scrollPane);
+        revalidate();
+        repaint();
     }
 
     public void showClienteDetailsView(Cliente client) {

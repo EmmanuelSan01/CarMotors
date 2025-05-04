@@ -6,18 +6,34 @@ package controlador;
 
 import model.Inspeccion;
 import dao.InspeccionDAO;
+
 import java.util.List;
+import java.util.Date;
 
 /**
  *
- * @author Emmanuel
+ * Autor: Emmanuel
  */
 public class InspectionController {
     private InspeccionDAO dao = new InspeccionDAO();
+    
+    public List<Inspeccion> getAllInspeccions() {
+        return dao.getAll();
+    }
 
-    public List<Inspeccion> getAllInspeccions() { return dao.getAll(); }
-    public Inspeccion getInspeccionById(int id) { return dao.getById(id); }
-    public void createInspeccion(Inspeccion inspection) { dao.insert(inspection); }
-    public void updateInspeccionResult(int id, String result) { dao.updateResult(id, result); }
-    public void scheduleFollowUpInspeccion(int id, Date date) { dao.scheduleFollowUp(id, date); }
+    public Inspeccion getInspeccionById(int id) {
+        throw new UnsupportedOperationException("getById() no implementado en InspeccionDAO.");
+    }
+
+    public void createInspeccion(Inspeccion inspection) {
+        throw new UnsupportedOperationException("insert() no implementado en InspeccionDAO.");
+    }
+
+    public void updateInspeccionResult(int id, String result) {
+        throw new UnsupportedOperationException("updateResult() no implementado en InspeccionDAO.");
+    }
+
+    public void scheduleFollowUpInspeccion(int id, Date date) {
+        throw new UnsupportedOperationException("scheduleFollowUp() no implementado en InspeccionDAO.");
+    }
 }

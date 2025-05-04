@@ -5,8 +5,9 @@
 package controlador;
 
 import model.Cliente;
-import model.Servicio;
 import dao.ClienteDAO;
+
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -16,13 +17,57 @@ import java.util.List;
 public class ClientController {
     private ClienteDAO dao = new ClienteDAO();
 
-    public List<Cliente> getAllClientes() { return dao.getAll(); }
-    public Cliente getClienteById(int id) { return dao.getById(id); }
-    public void addCliente(Cliente client) { dao.insert(client); }
-    public void updateCliente(Cliente client) { dao.update(client); }
-    public void deleteCliente(int id) { dao.delete(id); }
-    public List<Servicio> getClienteHistory(int id) { return dao.getHistory(id); }
-    public void scheduleMaintenanceReminder(int id, Date date) { dao.scheduleReminder(id, date); }
-    public double calculateClienteDiscount(int id) { return dao.getLoyaltyPoints(id) * 0.05; }
-    public void applyLoyaltyProgram(int id) { dao.incrementLoyalty(id); }
+    public List<Cliente> getAllClientes() {
+        try {
+            return dao.obtenerClientes();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return List.of(); // Retorna lista vacía si hay error
+        }
+    }
+
+    public void addCliente(Cliente client) {
+        try {
+            dao.agregarCliente(client);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateCliente(Cliente client) {
+        try {
+            dao.actualizarCliente(client);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteCliente(int id) {
+        try {
+            dao.eliminarCliente(id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Métodos no implementados en ClienteDAO: lanzan excepción
+    public Cliente getClienteById(int id) {
+        throw new UnsupportedOperationException("Método getClienteById no implementado en ClienteDAO.");
+    }
+
+    public List<Object> getClienteHistory(int id) {
+        throw new UnsupportedOperationException("Método getClienteHistory no implementado en ClienteDAO.");
+    }
+
+    public void scheduleMaintenanceReminder(int id, java.util.Date date) {
+        throw new UnsupportedOperationException("Método scheduleMaintenanceReminder no implementado en ClienteDAO.");
+    }
+
+    public double calculateClienteDiscount(int id) {
+        throw new UnsupportedOperationException("Método calculateClienteDiscount no implementado en ClienteDAO.");
+    }
+
+    public void applyLoyaltyProgram(int id) {
+        throw new UnsupportedOperationException("Método applyLoyaltyProgram no implementado en ClienteDAO.");
+    }
 }

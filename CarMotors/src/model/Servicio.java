@@ -25,6 +25,11 @@ public class Servicio {
     public enum EstadoServicio {
         PENDIENTE, EN_PROCESO, COMPLETADO, CANCELADO
     }
+    
+    public Servicio(int idServicio) {
+        this.idServicio = idServicio;
+    }
+
 
     // Constructor completo
     public Servicio(int idServicio, String tipo, Vehiculo vehiculo, int idTecnico, String descripcion, 

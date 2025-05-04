@@ -4,6 +4,7 @@
  */
 package vista;
 
+import controlador.SupplierController;
 import model.Proveedor;
 
 import javax.swing.*;
@@ -23,7 +24,29 @@ public class SupplierView extends JFrame {
     }
 
     public void showProveedorsList() {
-        JOptionPane.showMessageDialog(this, "Listado de proveedores (pendiente)");
+        getContentPane().removeAll();
+
+        SupplierController controller = new SupplierController();
+        java.util.List<Proveedor> proveedores = controller.getAllProveedors();
+
+        String[] columnas = {"ID", "Nombre", "NIT", "Contacto", "Frecuencia de Visita"};
+        Object[][] datos = new Object[proveedores.size()][columnas.length];
+
+        for (int i = 0; i < proveedores.size(); i++) {
+            Proveedor p = proveedores.get(i);
+            datos[i][0] = p.getIdProveedor();
+            datos[i][1] = p.getNombre();
+            datos[i][2] = p.getNit();
+            datos[i][3] = p.getContacto();
+            datos[i][4] = p.getFrecuenciaVisita();
+        }
+
+        JTable tabla = new JTable(datos, columnas);
+        JScrollPane scrollPane = new JScrollPane(tabla);
+
+        getContentPane().add(scrollPane);
+        revalidate();
+        repaint();
     }
 
     public void showProveedorDetailsView(Proveedor supplier) {
