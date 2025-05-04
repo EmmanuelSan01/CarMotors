@@ -56,6 +56,21 @@ public class RestockController {
         }
     }
 
+    public String getProveedorNombre(int idProveedor) {
+        String sql = "SELECT nombre FROM proveedor WHERE id_proveedor = ?";
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idProveedor);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("nombre");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "Desconocido";
+    }
+
     public List<Order> trackPendingOrders() {
         List<Order> ordenes = new ArrayList<>();
         String sql = "SELECT * FROM orden_compra WHERE estado = 'Pendiente'";

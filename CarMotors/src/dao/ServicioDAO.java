@@ -4,19 +4,13 @@
  */
 package dao;
 
-/**
- *
- * @author sebas
- */
 import model.Servicio;
 import model.Servicio.EstadoServicio;
 import model.Vehiculo;
+import model.Tecnico;
 import DatabaseConnection.DatabaseConnection;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +31,7 @@ public class ServicioDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, servicio.getTipo());
             stmt.setInt(2, servicio.getVehiculo().getIdVehiculo());
-            stmt.setInt(3, servicio.getIdTecnico());
+            stmt.setInt(3, servicio.getTecnico().getIdTecnico());
             stmt.setString(4, servicio.getDescripcion());
             stmt.setInt(5, servicio.getTiempoEstimado());
             stmt.setDouble(6, servicio.getCostoManoObra());
@@ -58,7 +52,14 @@ public class ServicioDAO {
 
     public List<Servicio> obtenerServicios() throws SQLException {
         List<Servicio> servicios = new ArrayList<>();
-        String sql = "SELECT id_servicio, tipo, id_vehiculo, id_tecnico, descripcion, tiempo_estimado, costo_manoobra, estado, fecha_inicio, fecha_fin FROM servicio";
+        String sql = """
+            SELECT s.id_servicio, s.tipo, s.id_vehiculo, s.id_tecnico, s.descripcion,
+                   s.tiempo_estimado, s.costo_manoobra, s.estado, s.fecha_inicio, s.fecha_fin,
+                   t.nombre AS tecnico_nombre
+            FROM servicio s
+            JOIN tecnico t ON s.id_tecnico = t.id_tecnico
+        """;
+
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -70,19 +71,21 @@ public class ServicioDAO {
                     estadoStr = estadoStr.trim();
                     System.out.println("Valor después de trim: '" + estadoStr + "' (length: " + estadoStr.length() + ")");
                     EstadoServicio estado = EstadoServicio.valueOf(estadoStr.toUpperCase().replace(" ", "_"));
-                    System.out.println("Valor normalizado de estado: '" + estado + "' (length: " + estado.toString().length() + ")");
+
+                    Tecnico tecnico = new Tecnico(rs.getInt("id_tecnico"));
+                    tecnico.setNombre(rs.getString("tecnico_nombre"));
 
                     Servicio servicio = new Servicio(
-                        rs.getInt("id_servicio"),
-                        rs.getString("tipo"),
-                        new Vehiculo(rs.getInt("id_vehiculo")),
-                        rs.getInt("id_tecnico"),
-                        rs.getString("descripcion"),
-                        rs.getInt("tiempo_estimado"),
-                        rs.getDouble("costo_manoobra"),
-                        estado,
-                        rs.getDate("fecha_inicio").toLocalDate(),
-                        rs.getDate("fecha_fin") == null ? null : rs.getDate("fecha_fin").toLocalDate()
+                            rs.getInt("id_servicio"),
+                            rs.getString("tipo"),
+                            new Vehiculo(rs.getInt("id_vehiculo")),
+                            tecnico,
+                            rs.getString("descripcion"),
+                            rs.getInt("tiempo_estimado"),
+                            rs.getDouble("costo_manoobra"),
+                            estado,
+                            rs.getDate("fecha_inicio").toLocalDate(),
+                            rs.getDate("fecha_fin") == null ? null : rs.getDate("fecha_fin").toLocalDate()
                     );
                     servicios.add(servicio);
                 } catch (Exception e) {
@@ -103,7 +106,7 @@ public class ServicioDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, servicio.getTipo());
             stmt.setInt(2, servicio.getVehiculo().getIdVehiculo());
-            stmt.setInt(3, servicio.getIdTecnico());
+            stmt.setInt(3, servicio.getTecnico().getIdTecnico());
             stmt.setString(4, servicio.getDescripcion());
             stmt.setInt(5, servicio.getTiempoEstimado());
             stmt.setDouble(6, servicio.getCostoManoObra());

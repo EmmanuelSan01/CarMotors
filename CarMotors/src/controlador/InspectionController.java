@@ -22,23 +22,11 @@ public class InspectionController {
         return dao.getAll();
     }
 
-    public Inspeccion getInspeccionById(int id) {
-        throw new UnsupportedOperationException("getById() no implementado en InspeccionDAO.");
-    }
-
     public void createInspeccion(Inspeccion inspection) {
         // Programar automáticamente seguimiento en 6 meses si fue aprobada
         if (inspection.getResultado() == Inspeccion.ResultadoInspeccion.APROBADO) {
             inspection.setFechaProxima(inspection.getFechaInspeccion().plusMonths(6));
         }
         dao.insert(inspection);
-    }
-
-    public void updateInspeccionResult(int id, String result) {
-        throw new UnsupportedOperationException("updateResult() no implementado en InspeccionDAO.");
-    }
-
-    public void scheduleFollowUpInspeccion(int id, Date date) {
-        throw new UnsupportedOperationException("scheduleFollowUp() no implementado en InspeccionDAO.");
     }
 }

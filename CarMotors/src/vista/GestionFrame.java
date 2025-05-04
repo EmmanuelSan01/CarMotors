@@ -28,25 +28,25 @@ public class GestionFrame extends JFrame {
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Botones con sus respectivos listeners
-        JButton btnInventario = new JButton("inventario");
+        JButton btnInventario = new JButton("Inventario");
         btnInventario.addActionListener(e -> new InventoryView().setVisible(true));
 
-        JButton btnReabastecimiento = new JButton("reabastecimiento");
+        JButton btnReabastecimiento = new JButton("Reabastecimiento");
         btnReabastecimiento.addActionListener(e -> new RestockView().setVisible(true));
 
-        JButton btnServicios = new JButton("servicios");
+        JButton btnServicios = new JButton("Servicios");
         btnServicios.addActionListener(e -> new ServiceView().setVisible(true));
 
-        JButton btnClientes = new JButton("clientes");
+        JButton btnClientes = new JButton("Clientes");
         btnClientes.addActionListener(e -> new ClientView().setVisible(true));
 
-        JButton btnProveedores = new JButton("proveedores");
+        JButton btnProveedores = new JButton("Proveedores");
         btnProveedores.addActionListener(e -> new SupplierView().setVisible(true));
 
-        JButton btnCampañas = new JButton("campañas");
+        JButton btnCampañas = new JButton("Campañas");
         btnCampañas.addActionListener(e -> new CampaignView().setVisible(true));
 
-        JButton btnInspecciones = new JButton("inspecciones");
+        JButton btnInspecciones = new JButton("Inspecciones");
         btnInspecciones.addActionListener(e -> new InspectionView().setVisible(true));
 
         // Agregar botones al panel

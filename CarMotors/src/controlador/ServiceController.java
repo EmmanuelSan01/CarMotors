@@ -4,10 +4,11 @@
  */
 package controlador;
 
+import DatabaseConnection.DatabaseConnection;
 import model.Servicio;
 import dao.ServicioDAO;
 
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.List;
 import java.util.Arrays;
 
@@ -16,6 +17,7 @@ import java.util.Arrays;
  * @author Emmanuel
  */
 public class ServiceController {
+
     private ServicioDAO dao = new ServicioDAO();
 
     public List<Servicio> getAllServices() {
@@ -53,9 +55,9 @@ public class ServiceController {
 
     public Servicio getServiceById(int serviceId) {
         return getAllServices().stream()
-            .filter(s -> s.getIdServicio() == serviceId)
-            .findFirst()
-            .orElse(null);
+                .filter(s -> s.getIdServicio() == serviceId)
+                .findFirst()
+                .orElse(null);
     }
 
     public void updateServiceStatus(int serviceId, String status) {
@@ -87,5 +89,20 @@ public class ServiceController {
 
     public void markServiceComplete(int serviceId) {
         updateServiceStatus(serviceId, "COMPLETADO");
+    }
+
+    public String getNombreTecnico(int idTecnico) {
+        String sql = "SELECT nombre FROM tecnico WHERE id_tecnico = ?";
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idTecnico);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("nombre");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "—";
     }
 }

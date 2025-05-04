@@ -36,7 +36,7 @@ public class ServiceView extends JFrame {
             Servicio s = servicios.get(i);
             datos[i][0] = s.getIdServicio();
             datos[i][1] = s.getTipo();
-            datos[i][2] = s.getIdTecnico();
+            datos[i][2] = s.getTecnico().getNombre();
             datos[i][3] = s.getEstado().name();
             datos[i][4] = s.getFechaInicio();
             datos[i][5] = s.getFechaFin() != null ? s.getFechaFin() : "—";

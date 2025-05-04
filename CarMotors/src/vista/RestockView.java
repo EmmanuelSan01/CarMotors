@@ -15,10 +15,11 @@ import java.awt.*;
 import java.util.List;
 
 /**
- * Vista para la gestión de reabastecimientos.
- * Incluye generación y seguimiento de órdenes de compra.
+ * Vista para la gestión de reabastecimientos. Incluye generación y seguimiento
+ * de órdenes de compra.
  */
 public class RestockView extends JFrame {
+
     private JTable tablaOrdenes;
     private DefaultTableModel ordenesModel;
     private RestockController restockController;
@@ -63,8 +64,9 @@ public class RestockView extends JFrame {
         ordenesModel.setRowCount(0);
         List<Order> ordenes = restockController.trackPendingOrders(); // puedes adaptar para todos los estados
         for (Order o : ordenes) {
+            String proveedorNombre = restockController.getProveedorNombre(o.getIdProveedor());
             ordenesModel.addRow(new Object[]{
-                    o.getIdOrden(), o.getIdProveedor(), o.getFechaOrden(), o.getEstado()
+                o.getIdOrden(), proveedorNombre, o.getFechaOrden(), o.getEstado()
             });
         }
     }
@@ -72,7 +74,9 @@ public class RestockView extends JFrame {
     private void generarOrden() {
         try {
             String input = JOptionPane.showInputDialog(this, "ID del proveedor:");
-            if (input == null) return;
+            if (input == null) {
+                return;
+            }
             int idProveedor = Integer.parseInt(input);
 
             List<Repuesto> bajoStock = inventoryController.checkLowStockItems();
@@ -95,7 +99,9 @@ public class RestockView extends JFrame {
         if (fila >= 0) {
             int id = (int) tablaOrdenes.getValueAt(fila, 0);
             String nuevoEstado = JOptionPane.showInputDialog(this, "Nuevo estado (Pendiente, Enviado, Recibido, Cancelado):");
-            if (nuevoEstado == null || nuevoEstado.isBlank()) return;
+            if (nuevoEstado == null || nuevoEstado.isBlank()) {
+                return;
+            }
 
             Order orden = new Order();
             orden.setIdOrden(id);

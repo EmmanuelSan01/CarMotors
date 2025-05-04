@@ -5,7 +5,6 @@
 package dao;
 
 import model.Inspeccion;
-import model.Inspeccion.ResultadoInspeccion;
 import model.Servicio;
 import model.Tecnico;
 import DatabaseConnection.DatabaseConnection;
@@ -21,15 +20,22 @@ public class InspeccionDAO {
 
     public List<Inspeccion> getAll() {
         List<Inspeccion> lista = new ArrayList<>();
-        String sql = "SELECT * FROM inspeccion";
+        String sql = """
+        SELECT i.*, t.nombre AS tecnico_nombre
+        FROM inspeccion i
+        JOIN tecnico t ON i.id_tecnico = t.id_tecnico
+        """;
 
         try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
+                Tecnico tecnico = new Tecnico(rs.getInt("id_tecnico"));
+                tecnico.setNombre(rs.getString("tecnico_nombre")); // aquí se fija el nombre
+
                 Inspeccion ins = new Inspeccion(
                         rs.getInt("id_inspeccion"),
-                        new Servicio(rs.getInt("id_servicio")), // requiere constructor simplificado
-                        new Tecnico(rs.getInt("id_tecnico")), // requiere constructor simplificado
+                        new Servicio(rs.getInt("id_servicio")),
+                        tecnico,
                         rs.getString("tipo_inspeccion"),
                         rs.getDate("fecha_inspeccion").toLocalDate(),
                         Inspeccion.ResultadoInspeccion.valueOf(rs.getString("resultado").toUpperCase().replace(" ", "_")),
