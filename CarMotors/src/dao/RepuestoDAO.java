@@ -27,7 +27,8 @@ public class RepuestoDAO {
 
     public void agregarRepuesto(Repuesto repuesto) throws SQLException {
         String sql = "INSERT INTO repuesto (nombre, tipo, marca, modelo, id_proveedor, cantidad_stock, nivel_minimo, fecha_ingreso, vida_util_meses, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, repuesto.getNombre());
             stmt.setString(2, repuesto.getTipo().name());
             stmt.setString(3, repuesto.getMarca() != null ? repuesto.getMarca().name() : null);
@@ -49,7 +50,9 @@ public class RepuestoDAO {
     public List<Repuesto> obtenerRepuestos() throws SQLException {
         List<Repuesto> repuestos = new ArrayList<>();
         String sql = "SELECT * FROM repuesto";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 try {
                     String tipoStr = rs.getString("tipo");
@@ -86,17 +89,17 @@ public class RepuestoDAO {
                     }
 
                     Repuesto repuesto = new Repuesto(
-                            rs.getInt("id_repuesto"),
-                            rs.getString("nombre"),
-                            tipo,
-                            marca,
-                            rs.getObject("modelo") != null ? rs.getInt("modelo") : null,
-                            new Proveedor(rs.getInt("id_proveedor")),
-                            rs.getInt("cantidad_stock"),
-                            rs.getInt("nivel_minimo"),
-                            rs.getDate("fecha_ingreso") != null ? rs.getDate("fecha_ingreso").toLocalDate() : null,
-                            rs.getInt("vida_util_meses"),
-                            estado
+                        rs.getInt("id_repuesto"),
+                        rs.getString("nombre"),
+                        tipo,
+                        marca,
+                        rs.getObject("modelo") != null ? rs.getInt("modelo") : null,
+                        new Proveedor(rs.getInt("id_proveedor")),
+                        rs.getInt("cantidad_stock"),
+                        rs.getInt("nivel_minimo"),
+                        rs.getDate("fecha_ingreso") != null ? rs.getDate("fecha_ingreso").toLocalDate() : null,
+                        rs.getInt("vida_util_meses"),
+                        estado
                     );
                     repuestos.add(repuesto);
                 } catch (Exception e) {
@@ -113,7 +116,8 @@ public class RepuestoDAO {
 
     public void actualizarRepuesto(Repuesto repuesto) throws SQLException {
         String sql = "UPDATE repuesto SET nombre = ?, tipo = ?, marca = ?, modelo = ?, id_proveedor = ?, cantidad_stock = ?, nivel_minimo = ?, fecha_ingreso = ?, vida_util_meses = ?, estado = ? WHERE id_repuesto = ?";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, repuesto.getNombre());
             stmt.setString(2, repuesto.getTipo().name());
             stmt.setString(3, repuesto.getMarca() != null ? repuesto.getMarca().name() : null);
@@ -135,7 +139,8 @@ public class RepuestoDAO {
 
     public void eliminarRepuesto(int idRepuesto) throws SQLException {
         String sql = "DELETE FROM repuesto WHERE id_repuesto = ?";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idRepuesto);
             int rowsAffected = stmt.executeUpdate();
             System.out.println("Repuesto eliminado, filas afectadas: " + rowsAffected);
@@ -145,35 +150,98 @@ public class RepuestoDAO {
         }
     }
 
-    public List<Repuesto> filterByType(String type) {
-        return safeFilter(r -> r.getTipo().name().equalsIgnoreCase(type));
-    }
+    public List<Repuesto> obtenerRepuestosConStockBajo() throws SQLException {
+        List<Repuesto> repuestos = new ArrayList<>();
+        String sql = "SELECT r.id_repuesto, r.nombre, r.tipo, r.marca, r.modelo, r.id_proveedor, r.cantidad_stock, r.nivel_minimo, r.fecha_ingreso, r.vida_util_meses, r.estado, p.nombre AS nombre_proveedor " +
+                     "FROM repuesto r JOIN proveedor p ON r.id_proveedor = p.id_proveedor " +
+                     "WHERE r.cantidad_stock <= r.nivel_minimo";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                try {
+                    String tipoStr = rs.getString("tipo");
+                    String estadoStr = rs.getString("estado");
+                    String marcaStr = rs.getString("marca");
 
-    public List<Repuesto> filterByBrand(String brand) {
-        return safeFilter(r -> r.getMarca() != null && r.getMarca().name().equalsIgnoreCase(brand));
-    }
+                    TipoRepuesto tipo = TipoRepuesto.valueOf(tipoStr);
+                    EstadoRepuesto estado = EstadoRepuesto.valueOf(estadoStr.replace(" ", "_"));
+                    MarcaVehiculo marca = marcaStr != null ? MarcaVehiculo.valueOf(marcaStr) : null;
 
-    public List<Repuesto> filterByStatus(String status) {
-        return safeFilter(r -> r.getEstado().name().replace("_", " ").equalsIgnoreCase(status));
-    }
+                    Proveedor proveedor = new Proveedor(rs.getInt("id_proveedor"));
+                    proveedor.setNombre(rs.getString("nombre_proveedor"));
 
-    private List<Repuesto> safeFilter(java.util.function.Predicate<Repuesto> condition) {
-        try {
-            return obtenerRepuestos().stream().filter(condition).toList();
+                    Repuesto repuesto = new Repuesto(
+                        rs.getInt("id_repuesto"),
+                        rs.getString("nombre"),
+                        tipo,
+                        marca,
+                        rs.getObject("modelo") != null ? rs.getInt("modelo") : null,
+                        proveedor,
+                        rs.getInt("cantidad_stock"),
+                        rs.getInt("nivel_minimo"),
+                        rs.getDate("fecha_ingreso") != null ? rs.getDate("fecha_ingreso").toLocalDate() : null,
+                        rs.getInt("vida_util_meses"),
+                        estado
+                    );
+                    repuestos.add(repuesto);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Error al procesar enums: " + e.getMessage());
+                }
+            }
+            System.out.println("Repuestos con stock bajo obtenidos: " + repuestos.size());
         } catch (SQLException e) {
-            e.printStackTrace();
-            return List.of();
+            System.err.println("Error al obtener repuestos con stock bajo: " + e.getMessage());
+            throw e;
         }
+        return repuestos;
     }
 
-    public void reducirStock(int idRepuesto, int cantidadReducida) {
-        String sql = "UPDATE repuesto SET cantidad_stock = cantidad_stock - ? WHERE id_repuesto = ?";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, cantidadReducida);
-            stmt.setInt(2, idRepuesto);
-            stmt.executeUpdate();
+    public List<Repuesto> obtenerRepuestosProximosACaducar() throws SQLException {
+        List<Repuesto> repuestos = new ArrayList<>();
+        String sql = "SELECT DISTINCT r.id_repuesto, r.nombre, r.tipo, r.marca, r.modelo, r.id_proveedor, r.cantidad_stock, r.nivel_minimo, r.fecha_ingreso, r.vida_util_meses, r.estado, p.nombre AS nombre_proveedor " +
+                     "FROM repuesto r JOIN proveedor p ON r.id_proveedor = p.id_proveedor " +
+                     "JOIN lote l ON r.id_repuesto = l.id_repuesto " +
+                     "WHERE l.fecha_caducidad <= DATE_ADD(CURDATE(), INTERVAL 1 MONTH)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                try {
+                    String tipoStr = rs.getString("tipo");
+                    String estadoStr = rs.getString("estado");
+                    String marcaStr = rs.getString("marca");
+
+                    TipoRepuesto tipo = TipoRepuesto.valueOf(tipoStr);
+                    EstadoRepuesto estado = EstadoRepuesto.valueOf(estadoStr.replace(" ", "_"));
+                    MarcaVehiculo marca = marcaStr != null ? MarcaVehiculo.valueOf(marcaStr) : null;
+
+                    Proveedor proveedor = new Proveedor(rs.getInt("id_proveedor"));
+                    proveedor.setNombre(rs.getString("nombre_proveedor"));
+
+                    Repuesto repuesto = new Repuesto(
+                        rs.getInt("id_repuesto"),
+                        rs.getString("nombre"),
+                        tipo,
+                        marca,
+                        rs.getObject("modelo") != null ? rs.getInt("modelo") : null,
+                        proveedor,
+                        rs.getInt("cantidad_stock"),
+                        rs.getInt("nivel_minimo"),
+                        rs.getDate("fecha_ingreso") != null ? rs.getDate("fecha_ingreso").toLocalDate() : null,
+                        rs.getInt("vida_util_meses"),
+                        estado
+                    );
+                    repuestos.add(repuesto);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Error al procesar enums: " + e.getMessage());
+                }
+            }
+            System.out.println("Repuestos próximos a caducar obtenidos: " + repuestos.size());
         } catch (SQLException e) {
-            System.err.println("Error al reducir stock: " + e.getMessage());
+            System.err.println("Error al obtener repuestos próximos a caducar: " + e.getMessage());
+            throw e;
         }
+        return repuestos;
     }
 }
