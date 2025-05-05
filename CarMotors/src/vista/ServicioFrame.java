@@ -441,6 +441,6 @@ public class ServicioFrame extends JFrame {
 
     private String normalizeEstado(String estado) {
         if (estado == null) return "Pendiente";
-        return estado.trim().toLowerCase().replace(" ", "_");
+        return estado.trim().toUpperCase().replace(" ", "_");
     }
 }

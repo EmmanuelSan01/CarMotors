@@ -31,7 +31,7 @@ public class ServicioDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, servicio.getTipo());
             stmt.setInt(2, servicio.getVehiculo().getIdVehiculo());
-            stmt.setInt(3, servicio.getTecnico().getIdTecnico());
+            stmt.setInt(3, servicio.getIdTecnico());
             stmt.setString(4, servicio.getDescripcion());
             stmt.setInt(5, servicio.getTiempoEstimado());
             stmt.setDouble(6, servicio.getCostoManoObra());
@@ -106,7 +106,7 @@ public class ServicioDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, servicio.getTipo());
             stmt.setInt(2, servicio.getVehiculo().getIdVehiculo());
-            stmt.setInt(3, servicio.getTecnico().getIdTecnico());
+            stmt.setInt(3, servicio.getIdTecnico());
             stmt.setString(4, servicio.getDescripcion());
             stmt.setInt(5, servicio.getTiempoEstimado());
             stmt.setDouble(6, servicio.getCostoManoObra());

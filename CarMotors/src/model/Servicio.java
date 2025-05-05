@@ -27,21 +27,7 @@ public class Servicio {
         PENDIENTE, EN_PROCESO, COMPLETADO, ENTREGADO
     }
 
-    // Método para mapear el estado al valor de la base de datos
-    public String getEstadoParaBD() {
-        switch (this.estado) {
-            case PENDIENTE:
-                return "Pendiente";
-            case EN_PROCESO:
-                return "En proceso";
-            case COMPLETADO:
-                return "Completado";
-            case ENTREGADO:
-                return "Entregado"; // Mapear CANCELADO a Entregado
-            default:
-                return "Pendiente"; // Valor por defecto
-        }
-    }
+
      public Servicio(int idServicio) {
         this.idServicio = idServicio;
     }
