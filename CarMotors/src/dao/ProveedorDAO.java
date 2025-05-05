@@ -89,4 +89,59 @@ public class ProveedorDAO {
             throw e;
         }
     }
+    
+    // Clase auxiliar para evaluación (puedes convertirla en clase real si prefieres)
+    public static class EvaluacionProveedor {
+        public int proveedorId;
+        public int puntualidad; // 1–5
+        public int calidad;
+        public int costo;
+
+        public EvaluacionProveedor(int proveedorId, int puntualidad, int calidad, int costo) {
+            this.proveedorId = proveedorId;
+            this.puntualidad = puntualidad;
+            this.calidad = calidad;
+            this.costo = costo;
+        }
+    }
+
+    public void evaluarProveedor(EvaluacionProveedor evaluacion) throws SQLException {
+        String sql = "INSERT INTO evaluacion_proveedor (id_proveedor, puntualidad, calidad, costo, fecha) VALUES (?, ?, ?, ?, NOW())";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, evaluacion.proveedorId);
+            stmt.setInt(2, evaluacion.puntualidad);
+            stmt.setInt(3, evaluacion.calidad);
+            stmt.setInt(4, evaluacion.costo);
+            stmt.executeUpdate();
+        }
+    }
+
+    public String obtenerReporteDesempeno(int idProveedor) throws SQLException {
+        String sql = """
+            SELECT 
+                AVG(puntualidad) AS promedio_puntualidad,
+                AVG(calidad) AS promedio_calidad,
+                AVG(costo) AS promedio_costo,
+                COUNT(*) AS total_evaluaciones
+            FROM evaluacion_proveedor
+            WHERE id_proveedor = ?
+            """;
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idProveedor);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return String.format(
+                        "Evaluaciones: %d\nPuntualidad: %.2f\nCalidad: %.2f\nCosto: %.2f",
+                        rs.getInt("total_evaluaciones"),
+                        rs.getDouble("promedio_puntualidad"),
+                        rs.getDouble("promedio_calidad"),
+                        rs.getDouble("promedio_costo")
+                    );
+                }
+            }
+        }
+        return "No hay evaluaciones registradas.";
+    }
 }

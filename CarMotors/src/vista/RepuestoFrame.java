@@ -8,7 +8,6 @@ package vista;
  *
  * @author sebas
  */
-import dao.ProveedorDAO;
 import dao.RepuestoDAO;
 import model.Proveedor;
 import model.Repuesto;
@@ -19,21 +18,16 @@ import model.Repuesto.TipoRepuesto;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class RepuestoFrame extends JFrame {
     private RepuestoDAO repuestoDAO;
-    private ProveedorDAO proveedorDAO;
     private JTable tablaRepuestos;
     private DefaultTableModel tableModel;
-    private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public RepuestoFrame() {
         repuestoDAO = new RepuestoDAO();
-        proveedorDAO = new ProveedorDAO();
         initUI();
     }
 
@@ -43,8 +37,11 @@ public class RepuestoFrame extends JFrame {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
+        // Panel principal
         JPanel panel = new JPanel(new BorderLayout());
-        String[] columnas = {"ID Repuesto", "Nombre", "Tipo", "Marca", "Modelo", "Stock", "Nivel Mínimo", "Fecha Ingreso", "Vida Útil", "Estado", "Proveedor"};
+
+        // Tabla de repuestos
+        String[] columnas = {"ID", "Nombre", "Tipo", "Marca", "Modelo", "Stock", "Nivel Mínimo", "Estado"};
         tableModel = new DefaultTableModel(columnas, 0);
         tablaRepuestos = new JTable(tableModel);
         cargarRepuestos();
@@ -52,21 +49,19 @@ public class RepuestoFrame extends JFrame {
         JScrollPane scrollPane = new JScrollPane(tablaRepuestos);
         panel.add(scrollPane, BorderLayout.CENTER);
 
+        // Panel de botones
         JPanel panelBotones = new JPanel();
         JButton btnAgregar = new JButton("Agregar Repuesto");
         JButton btnEditar = new JButton("Editar Repuesto");
         JButton btnEliminar = new JButton("Eliminar Repuesto");
-        JButton btnAlertas = new JButton("Ver Alertas");
 
         btnAgregar.addActionListener(e -> mostrarFormularioAgregar());
         btnEditar.addActionListener(e -> mostrarFormularioEditar());
         btnEliminar.addActionListener(e -> eliminarRepuesto());
-        btnAlertas.addActionListener(e -> mostrarAlertas());
 
         panelBotones.add(btnAgregar);
         panelBotones.add(btnEditar);
         panelBotones.add(btnEliminar);
-        panelBotones.add(btnAlertas);
         panel.add(panelBotones, BorderLayout.SOUTH);
 
         add(panel);
@@ -76,103 +71,111 @@ public class RepuestoFrame extends JFrame {
         try {
             tableModel.setRowCount(0);
             List<Repuesto> repuestos = repuestoDAO.obtenerRepuestos();
-            for (Repuesto repuesto : repuestos) {
-                tableModel.addRow(new Object[]{
-                    repuesto.getIdRepuesto(),
-                    repuesto.getNombre(),
-                    repuesto.getTipo().name(),
-                    repuesto.getMarca() != null ? repuesto.getMarca().name() : "",
-                    repuesto.getModelo(),
-                    repuesto.getCantidadStock(),
-                    repuesto.getNivelMinimo(),
-                    repuesto.getFechaIngreso() != null ? repuesto.getFechaIngreso().format(dateFormatter) : "",
-                    repuesto.getVidaUtilMeses(),
-                    repuesto.getEstado().name().replace("_", " "),
-                    repuesto.getProveedor() != null ? repuesto.getProveedor().getNombre() : ""
-                });
+            for (Repuesto rep : repuestos) {
+                Object[] fila = {
+                    rep.getIdRepuesto(),
+                    rep.getNombre(),
+                    rep.getTipo(),
+                    rep.getMarca(),
+                    rep.getModelo(),
+                    rep.getCantidadStock(),
+                    rep.getNivelMinimo(),
+                    rep.getEstado()
+                };
+                tableModel.addRow(fila);
             }
-        } catch (SQLException e) {
+            System.out.println("Tabla de repuestos actualizada con " + repuestos.size() + " elementos.");
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error al cargar repuestos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            System.err.println("Error al cargar repuestos: " + e.getMessage());
         }
     }
 
     private void mostrarFormularioAgregar() {
         JDialog dialog = new JDialog(this, "Agregar Repuesto", true);
-        dialog.setSize(400, 400);
+        dialog.setSize(400, 500);
         dialog.setLocationRelativeTo(this);
-        dialog.setLayout(new GridLayout(11, 2, 10, 10));
+        dialog.setLayout(new GridLayout(10, 2, 10, 10));
 
         JTextField txtNombre = new JTextField();
-        JComboBox<TipoRepuesto> cbTipo = new JComboBox<>(TipoRepuesto.values());
-        JComboBox<MarcaVehiculo> cbMarca = new JComboBox<>(MarcaVehiculo.values());
-        cbMarca.insertItemAt(null, 0);
-        cbMarca.setSelectedIndex(0);
+        JComboBox<TipoRepuesto> cmbTipo = new JComboBox<>(TipoRepuesto.values());
+        JComboBox<MarcaVehiculo> cmbMarca = new JComboBox<>(MarcaVehiculo.values());
         JTextField txtModelo = new JTextField();
-        JComboBox<Proveedor> cbProveedor = new JComboBox<>();
-        try {
-            List<Proveedor> proveedores = proveedorDAO.obtenerProveedores();
-            proveedores.forEach(cbProveedor::addItem);
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error al cargar proveedores: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-        JTextField txtCantidadStock = new JTextField("0");
-        JTextField txtNivelMinimo = new JTextField("0");
-        JTextField txtFechaIngreso = new JTextField(LocalDate.now().format(dateFormatter));
+        JTextField txtProveedorId = new JTextField();
+        JTextField txtStock = new JTextField();
+        JTextField txtNivelMinimo = new JTextField();
         JTextField txtVidaUtil = new JTextField();
-        JComboBox<EstadoRepuesto> cbEstado = new JComboBox<>(EstadoRepuesto.values());
+        JComboBox<EstadoRepuesto> cmbEstado = new JComboBox<>(EstadoRepuesto.values());
 
         dialog.add(new JLabel("Nombre:"));
         dialog.add(txtNombre);
         dialog.add(new JLabel("Tipo:"));
-        dialog.add(cbTipo);
+        dialog.add(cmbTipo);
         dialog.add(new JLabel("Marca:"));
-        dialog.add(cbMarca);
+        dialog.add(cmbMarca);
         dialog.add(new JLabel("Modelo:"));
         dialog.add(txtModelo);
-        dialog.add(new JLabel("Proveedor:"));
-        dialog.add(cbProveedor);
-        dialog.add(new JLabel("Cantidad Stock:"));
-        dialog.add(txtCantidadStock);
+        dialog.add(new JLabel("ID Proveedor:"));
+        dialog.add(txtProveedorId);
+        dialog.add(new JLabel("Stock:"));
+        dialog.add(txtStock);
         dialog.add(new JLabel("Nivel Mínimo:"));
         dialog.add(txtNivelMinimo);
-        dialog.add(new JLabel("Fecha Ingreso:"));
-        dialog.add(txtFechaIngreso);
-        dialog.add(new JLabel("Vida Útil (Meses):"));
+        dialog.add(new JLabel("Vida Útil (meses):"));
         dialog.add(txtVidaUtil);
         dialog.add(new JLabel("Estado:"));
-        dialog.add(cbEstado);
+        dialog.add(cmbEstado);
 
         JButton btnGuardar = new JButton("Guardar");
-        JButton btnCancelar = new JButton("Cancelar");
         btnGuardar.addActionListener(e -> {
             try {
-                Integer modelo = txtModelo.getText().isEmpty() ? null : Integer.parseInt(txtModelo.getText());
-                LocalDate fechaIngreso = LocalDate.parse(txtFechaIngreso.getText(), dateFormatter);
+                // Validar entradas
+                if (txtNombre.getText().trim().isEmpty()) {
+                    throw new IllegalArgumentException("El nombre del repuesto es obligatorio.");
+                }
+                if (txtStock.getText().trim().isEmpty() || Integer.parseInt(txtStock.getText()) < 0) {
+                    throw new IllegalArgumentException("El stock debe ser un número no negativo.");
+                }
+                if (txtNivelMinimo.getText().trim().isEmpty() || Integer.parseInt(txtNivelMinimo.getText()) < 0) {
+                    throw new IllegalArgumentException("El nivel mínimo debe ser un número no negativo.");
+                }
+                if (txtVidaUtil.getText().trim().isEmpty() || Integer.parseInt(txtVidaUtil.getText()) <= 0) {
+                    throw new IllegalArgumentException("La vida útil debe ser un número positivo.");
+                }
+                if (txtProveedorId.getText().trim().isEmpty()) {
+                    throw new IllegalArgumentException("El ID del proveedor es obligatorio.");
+                }
+
                 Repuesto repuesto = new Repuesto(
-                    0,
+                    0, // ID se genera automáticamente
                     txtNombre.getText(),
-                    (TipoRepuesto) cbTipo.getSelectedItem(),
-                    (MarcaVehiculo) cbMarca.getSelectedItem(),
-                    modelo,
-                    (Proveedor) cbProveedor.getSelectedItem(),
-                    Integer.parseInt(txtCantidadStock.getText()),
+                    (TipoRepuesto) cmbTipo.getSelectedItem(),
+                    (MarcaVehiculo) cmbMarca.getSelectedItem(),
+                    txtModelo.getText().isEmpty() ? null : Integer.parseInt(txtModelo.getText()),
+                    new Proveedor(Integer.parseInt(txtProveedorId.getText())),
+                    Integer.parseInt(txtStock.getText()),
                     Integer.parseInt(txtNivelMinimo.getText()),
-                    fechaIngreso,
+                    LocalDate.now(),
                     Integer.parseInt(txtVidaUtil.getText()),
-                    (EstadoRepuesto) cbEstado.getSelectedItem()
+                    (EstadoRepuesto) cmbEstado.getSelectedItem()
                 );
                 repuestoDAO.agregarRepuesto(repuesto);
                 cargarRepuestos();
                 dialog.dispose();
                 JOptionPane.showMessageDialog(this, "Repuesto agregado exitosamente");
-            } catch (SQLException | NumberFormatException | java.time.format.DateTimeParseException ex) {
-                JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Error en los datos numéricos: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                System.err.println("Error en los datos numéricos: " + ex.getMessage());
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                System.err.println("Error en los datos: " + ex.getMessage());
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error al agregar repuesto: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                System.err.println("Error al agregar repuesto: " + ex.getMessage());
             }
         });
-        btnCancelar.addActionListener(e -> dialog.dispose());
 
         dialog.add(btnGuardar);
-        dialog.add(btnCancelar);
         dialog.setVisible(true);
     }
 
@@ -180,88 +183,99 @@ public class RepuestoFrame extends JFrame {
         int filaSeleccionada = tablaRepuestos.getSelectedRow();
         if (filaSeleccionada >= 0) {
             int idRepuesto = (int) tableModel.getValueAt(filaSeleccionada, 0);
-            JDialog dialog = new JDialog(this, "Editar Repuesto", true);
-            dialog.setSize(400, 400);
-            dialog.setLocationRelativeTo(this);
-            dialog.setLayout(new GridLayout(11, 2, 10, 10));
-
-            JTextField txtNombre = new JTextField((String) tableModel.getValueAt(filaSeleccionada, 1));
-            JComboBox<TipoRepuesto> cbTipo = new JComboBox<>(TipoRepuesto.values());
-            cbTipo.setSelectedItem(TipoRepuesto.valueOf((String) tableModel.getValueAt(filaSeleccionada, 2)));
-            JComboBox<MarcaVehiculo> cbMarca = new JComboBox<>(MarcaVehiculo.values());
-            cbMarca.insertItemAt(null, 0);
-            cbMarca.setSelectedItem(tableModel.getValueAt(filaSeleccionada, 3).equals("") ? null : MarcaVehiculo.valueOf((String) tableModel.getValueAt(filaSeleccionada, 3)));
-            JTextField txtModelo = new JTextField(tableModel.getValueAt(filaSeleccionada, 4) != null ? tableModel.getValueAt(filaSeleccionada, 4).toString() : "");
-            JComboBox<Proveedor> cbProveedor = new JComboBox<>();
             try {
-                List<Proveedor> proveedores = proveedorDAO.obtenerProveedores();
-                proveedores.forEach(cbProveedor::addItem);
-                cbProveedor.setSelectedItem(proveedores.stream()
-                    .filter(p -> p.getNombre().equals(tableModel.getValueAt(filaSeleccionada, 10)))
-                    .findFirst().orElse(null));
-            } catch (SQLException e) {
-                JOptionPane.showMessageDialog(this, "Error al cargar proveedores: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JDialog dialog = new JDialog(this, "Editar Repuesto", true);
+                dialog.setSize(400, 500);
+                dialog.setLocationRelativeTo(this);
+                dialog.setLayout(new GridLayout(10, 2, 10, 10));
+
+                JTextField txtNombre = new JTextField((String) tableModel.getValueAt(filaSeleccionada, 1));
+                JComboBox<TipoRepuesto> cmbTipo = new JComboBox<>(TipoRepuesto.values());
+                cmbTipo.setSelectedItem(tableModel.getValueAt(filaSeleccionada, 2));
+                JComboBox<MarcaVehiculo> cmbMarca = new JComboBox<>(MarcaVehiculo.values());
+                cmbMarca.setSelectedItem(tableModel.getValueAt(filaSeleccionada, 3));
+                JTextField txtModelo = new JTextField(tableModel.getValueAt(filaSeleccionada, 4) != null ? tableModel.getValueAt(filaSeleccionada, 4).toString() : "");
+                JTextField txtProveedorId = new JTextField("1"); // Simplificado
+                JTextField txtStock = new JTextField(tableModel.getValueAt(filaSeleccionada, 5).toString());
+                JTextField txtNivelMinimo = new JTextField(tableModel.getValueAt(filaSeleccionada, 6).toString());
+                JTextField txtVidaUtil = new JTextField("12"); // Simplificado
+                JComboBox<EstadoRepuesto> cmbEstado = new JComboBox<>(EstadoRepuesto.values());
+                cmbEstado.setSelectedItem(tableModel.getValueAt(filaSeleccionada, 7));
+
+                dialog.add(new JLabel("Nombre:"));
+                dialog.add(txtNombre);
+                dialog.add(new JLabel("Tipo:"));
+                dialog.add(cmbTipo);
+                dialog.add(new JLabel("Marca:"));
+                dialog.add(cmbMarca);
+                dialog.add(new JLabel("Modelo:"));
+                dialog.add(txtModelo);
+                dialog.add(new JLabel("ID Proveedor:"));
+                dialog.add(txtProveedorId);
+                dialog.add(new JLabel("Stock:"));
+                dialog.add(txtStock);
+                dialog.add(new JLabel("Nivel Mínimo:"));
+                dialog.add(txtNivelMinimo);
+                dialog.add(new JLabel("Vida Útil (meses):"));
+                dialog.add(txtVidaUtil);
+                dialog.add(new JLabel("Estado:"));
+                dialog.add(cmbEstado);
+
+                JButton btnGuardar = new JButton("Guardar");
+                btnGuardar.addActionListener(e -> {
+                    try {
+                        // Validar entradas
+                        if (txtNombre.getText().trim().isEmpty()) {
+                            throw new IllegalArgumentException("El nombre del repuesto es obligatorio.");
+                        }
+                        if (txtStock.getText().trim().isEmpty() || Integer.parseInt(txtStock.getText()) < 0) {
+                            throw new IllegalArgumentException("El stock debe ser un número no negativo.");
+                        }
+                        if (txtNivelMinimo.getText().trim().isEmpty() || Integer.parseInt(txtNivelMinimo.getText()) < 0) {
+                            throw new IllegalArgumentException("El nivel mínimo debe ser un número no negativo.");
+                        }
+                        if (txtVidaUtil.getText().trim().isEmpty() || Integer.parseInt(txtVidaUtil.getText()) <= 0) {
+                            throw new IllegalArgumentException("La vida útil debe ser un número positivo.");
+                        }
+                        if (txtProveedorId.getText().trim().isEmpty()) {
+                            throw new IllegalArgumentException("El ID del proveedor es obligatorio.");
+                        }
+
+                        Repuesto repuesto = new Repuesto(
+                            idRepuesto,
+                            txtNombre.getText(),
+                            (TipoRepuesto) cmbTipo.getSelectedItem(),
+                            (MarcaVehiculo) cmbMarca.getSelectedItem(),
+                            txtModelo.getText().isEmpty() ? null : Integer.parseInt(txtModelo.getText()),
+                            new Proveedor(Integer.parseInt(txtProveedorId.getText())),
+                            Integer.parseInt(txtStock.getText()),
+                            Integer.parseInt(txtNivelMinimo.getText()),
+                            LocalDate.now(),
+                            Integer.parseInt(txtVidaUtil.getText()),
+                            (EstadoRepuesto) cmbEstado.getSelectedItem()
+                        );
+                        repuestoDAO.actualizarRepuesto(repuesto);
+                        cargarRepuestos();
+                        dialog.dispose();
+                        JOptionPane.showMessageDialog(this, "Repuesto actualizado exitosamente");
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(this, "Error en los datos numéricos: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        System.err.println("Error en los datos numéricos: " + ex.getMessage());
+                    } catch (IllegalArgumentException ex) {
+                        JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        System.err.println("Error en los datos: " + ex.getMessage());
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(this, "Error al actualizar repuesto: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        System.err.println("Error al actualizar repuesto: " + ex.getMessage());
+                    }
+                });
+
+                dialog.add(btnGuardar);
+                dialog.setVisible(true);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar repuesto: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                System.err.println("Error al cargar repuesto: " + e.getMessage());
             }
-            JTextField txtCantidadStock = new JTextField(tableModel.getValueAt(filaSeleccionada, 5).toString());
-            JTextField txtNivelMinimo = new JTextField(tableModel.getValueAt(filaSeleccionada, 6).toString());
-            JTextField txtFechaIngreso = new JTextField((String) tableModel.getValueAt(filaSeleccionada, 7));
-            JTextField txtVidaUtil = new JTextField(tableModel.getValueAt(filaSeleccionada, 8).toString());
-            JComboBox<EstadoRepuesto> cbEstado = new JComboBox<>(EstadoRepuesto.values());
-            cbEstado.setSelectedItem(EstadoRepuesto.valueOf(((String) tableModel.getValueAt(filaSeleccionada, 9)).replace(" ", "_")));
-
-            dialog.add(new JLabel("Nombre:"));
-            dialog.add(txtNombre);
-            dialog.add(new JLabel("Tipo:"));
-            dialog.add(cbTipo);
-            dialog.add(new JLabel("Marca:"));
-            dialog.add(cbMarca);
-            dialog.add(new JLabel("Modelo:"));
-            dialog.add(txtModelo);
-            dialog.add(new JLabel("Proveedor:"));
-            dialog.add(cbProveedor);
-            dialog.add(new JLabel("Cantidad Stock:"));
-            dialog.add(txtCantidadStock);
-            dialog.add(new JLabel("Nivel Mínimo:"));
-            dialog.add(txtNivelMinimo);
-            dialog.add(new JLabel("Fecha Ingreso:"));
-            dialog.add(txtFechaIngreso);
-            dialog.add(new JLabel("Vida Útil (Meses):"));
-            dialog.add(txtVidaUtil);
-            dialog.add(new JLabel("Estado:"));
-            dialog.add(cbEstado);
-
-            JButton btnGuardar = new JButton("Guardar");
-            JButton btnCancelar = new JButton("Cancelar");
-            btnGuardar.addActionListener(e -> {
-                try {
-                    Integer modelo = txtModelo.getText().isEmpty() ? null : Integer.parseInt(txtModelo.getText());
-                    LocalDate fechaIngreso = LocalDate.parse(txtFechaIngreso.getText(), dateFormatter);
-                    Repuesto repuesto = new Repuesto(
-                        idRepuesto,
-                        txtNombre.getText(),
-                        (TipoRepuesto) cbTipo.getSelectedItem(),
-                        (MarcaVehiculo) cbMarca.getSelectedItem(),
-                        modelo,
-                        (Proveedor) cbProveedor.getSelectedItem(),
-                        Integer.parseInt(txtCantidadStock.getText()),
-                        Integer.parseInt(txtNivelMinimo.getText()),
-                        fechaIngreso,
-                        Integer.parseInt(txtVidaUtil.getText()),
-                        (EstadoRepuesto) cbEstado.getSelectedItem()
-                    );
-                    repuestoDAO.actualizarRepuesto(repuesto);
-                    cargarRepuestos();
-                    dialog.dispose();
-                    JOptionPane.showMessageDialog(this, "Repuesto actualizado exitosamente");
-                } catch (SQLException | NumberFormatException | java.time.format.DateTimeParseException ex) {
-                    JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            });
-            btnCancelar.addActionListener(e -> dialog.dispose());
-
-            dialog.add(btnGuardar);
-            dialog.add(btnCancelar);
-            dialog.setVisible(true);
         } else {
             JOptionPane.showMessageDialog(this, "Seleccione un repuesto para editar", "Advertencia", JOptionPane.WARNING_MESSAGE);
         }
@@ -271,40 +285,16 @@ public class RepuestoFrame extends JFrame {
         int filaSeleccionada = tablaRepuestos.getSelectedRow();
         if (filaSeleccionada >= 0) {
             int idRepuesto = (int) tableModel.getValueAt(filaSeleccionada, 0);
-            int confirm = JOptionPane.showConfirmDialog(this, "¿Está seguro de eliminar este repuesto?", "Confirmar", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                try {
-                    repuestoDAO.eliminarRepuesto(idRepuesto);
-                    cargarRepuestos();
-                    JOptionPane.showMessageDialog(this, "Repuesto eliminado exitosamente");
-                } catch (SQLException e) {
-                    JOptionPane.showMessageDialog(this, "Error al eliminar repuesto: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
+            try {
+                repuestoDAO.eliminarRepuesto(idRepuesto);
+                cargarRepuestos();
+                JOptionPane.showMessageDialog(this, "Repuesto eliminado exitosamente");
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al eliminar repuesto: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                System.err.println("Error al eliminar repuesto: " + e.getMessage());
             }
         } else {
             JOptionPane.showMessageDialog(this, "Seleccione un repuesto para eliminar", "Advertencia", JOptionPane.WARNING_MESSAGE);
-        }
-    }
-
-    private void mostrarAlertas() {
-        try {
-            List<Repuesto> stockBajo = repuestoDAO.obtenerRepuestosConStockBajo();
-            List<Repuesto> proximosCaducar = repuestoDAO.obtenerRepuestosProximosACaducar();
-            StringBuilder mensaje = new StringBuilder();
-            if (!stockBajo.isEmpty()) {
-                mensaje.append("Repuestos con stock bajo:\n");
-                stockBajo.forEach(r -> mensaje.append("- ").append(r.getNombre()).append(" (Stock: ").append(r.getCantidadStock()).append(")\n"));
-            }
-            if (!proximosCaducar.isEmpty()) {
-                mensaje.append("\nRepuestos próximos a caducar:\n");
-                proximosCaducar.forEach(r -> mensaje.append("- ").append(r.getNombre()).append("\n"));
-            }
-            if (mensaje.length() == 0) {
-                mensaje.append("No hay alertas de stock bajo ni caducidad.");
-            }
-            JOptionPane.showMessageDialog(this, mensaje.toString(), "Alertas de Inventario", JOptionPane.INFORMATION_MESSAGE);
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error al verificar alertas: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

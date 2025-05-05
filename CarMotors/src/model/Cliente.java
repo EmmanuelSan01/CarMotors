@@ -29,6 +29,10 @@ public class Cliente {
         this.idCliente = idCliente;
     }
 
+    public Cliente() {
+        //
+    }
+
     // Getters y Setters
     public int getIdCliente() { return idCliente; }
     public void setIdCliente(int idCliente) { this.idCliente = idCliente; }
