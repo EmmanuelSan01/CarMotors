@@ -23,8 +23,7 @@ public class VehiculoDAO {
 
     public void agregarVehiculo(Vehiculo vehiculo) throws SQLException {
         String sql = "INSERT INTO vehiculo (id_cliente, marca, modelo, placa, tipo) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, vehiculo.getCliente().getIdCliente());
             stmt.setString(2, vehiculo.getMarca());
             stmt.setInt(3, vehiculo.getModelo());
@@ -41,17 +40,15 @@ public class VehiculoDAO {
     public List<Vehiculo> obtenerVehiculos() throws SQLException {
         List<Vehiculo> vehiculos = new ArrayList<>();
         String sql = "SELECT id_vehiculo, id_cliente, marca, modelo, placa, tipo FROM vehiculo";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Vehiculo vehiculo = new Vehiculo(
-                    rs.getInt("id_vehiculo"),
-                    rs.getString("placa"),
-                    rs.getString("marca"),
-                    rs.getInt("modelo"),
-                    rs.getString("tipo"),
-                    new Cliente(rs.getInt("id_cliente"))
+                        rs.getInt("id_vehiculo"),
+                        rs.getString("placa"),
+                        rs.getString("marca"),
+                        rs.getInt("modelo"),
+                        rs.getString("tipo"),
+                        new Cliente(rs.getInt("id_cliente"))
                 );
                 vehiculos.add(vehiculo);
             }
@@ -65,8 +62,7 @@ public class VehiculoDAO {
 
     public void actualizarVehiculo(Vehiculo vehiculo) throws SQLException {
         String sql = "UPDATE vehiculo SET id_cliente = ?, marca = ?, modelo = ?, placa = ?, tipo = ? WHERE id_vehiculo = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, vehiculo.getCliente().getIdCliente());
             stmt.setString(2, vehiculo.getMarca());
             stmt.setInt(3, vehiculo.getModelo());
@@ -83,8 +79,7 @@ public class VehiculoDAO {
 
     public void eliminarVehiculo(int idVehiculo) throws SQLException {
         String sql = "DELETE FROM vehiculo WHERE id_vehiculo = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idVehiculo);
             int rowsAffected = stmt.executeUpdate();
             System.out.println("Vehículo eliminado, filas afectadas: " + rowsAffected);

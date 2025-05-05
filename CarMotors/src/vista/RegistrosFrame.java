@@ -23,7 +23,7 @@ public class RegistrosFrame extends JFrame{
         setLocationRelativeTo(null);
 
         // Panel principal
-        JPanel panel = new JPanel(new GridLayout(6, 1, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(7, 1, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Botones para cada módulo
@@ -32,7 +32,8 @@ public class RegistrosFrame extends JFrame{
         JButton btnRepuestos = new JButton("Registro de Repuestos");
         JButton btnLotes = new JButton("Registro de Lotes");
         JButton btnVehiculos = new JButton("Registro de Vehículos");
-        JButton btnServicios = new JButton("Registro de Servicios");
+        JButton btnServicios = new JButton("Seguimiento de Servicios");
+        JButton btnSalir = new JButton("Salir");
 
         btnClientes.addActionListener(e -> new ClienteFrame().setVisible(true));
         btnProveedores.addActionListener(e -> new ProveedorFrame().setVisible(true));
@@ -40,6 +41,7 @@ public class RegistrosFrame extends JFrame{
         btnLotes.addActionListener(e -> new LoteFrame().setVisible(true));
         btnVehiculos.addActionListener(e -> new VehiculoFrame().setVisible(true));
         btnServicios.addActionListener(e -> new ServicioFrame().setVisible(true));
+        btnSalir.addActionListener(e -> System.exit(0));
 
         panel.add(btnClientes);
         panel.add(btnProveedores);
@@ -47,6 +49,7 @@ public class RegistrosFrame extends JFrame{
         panel.add(btnLotes);
         panel.add(btnVehiculos);
         panel.add(btnServicios);
+        panel.add(btnSalir);
 
         add(panel);
     }

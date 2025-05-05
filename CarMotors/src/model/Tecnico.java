@@ -14,6 +14,11 @@ public class Tecnico {
     private String identificacion;
     private String especialidad;
     private String telefono;
+    
+    public Tecnico(int idTecnico) {
+        this.idTecnico = idTecnico;
+    }
+
 
     // Constructor
     public Tecnico(int idTecnico, String nombre, String identificacion, String especialidad, String telefono) {
