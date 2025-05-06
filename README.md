@@ -30,12 +30,13 @@ CarMotors busca digitalizar y optimizar la operación diaria de un taller mecán
 El proyecto está estructurado por capas, bajo el patrón arquitectónico MVC (Modelo-Vista-Controlador):
 
 📦 CarMotors
+```
 ├── controlador/ → Controladores (conexión lógica entre modelo y vista)
 ├── dao/ → Acceso a datos y consultas (CRUD)
 ├── model/ → Entidades del dominio (POJOs)
 ├── vista/ → Interfaces gráficas (Swing)
 └── DatabaseConnection/ → Clase de conexión a la base de datos.
-
+```
 
 ---
 
