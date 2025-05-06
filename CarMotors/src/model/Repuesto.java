@@ -23,7 +23,6 @@ public class Repuesto {
     private int vidaUtilMeses;
     private EstadoRepuesto estado;
 
-    // Constructor completo
     public Repuesto(int idRepuesto, String nombre, TipoRepuesto tipo, MarcaVehiculo marca, Integer modelo,
                     Proveedor proveedor, int cantidadStock, int nivelMinimo, LocalDate fechaIngreso,
                     int vidaUtilMeses, EstadoRepuesto estado) {
@@ -40,12 +39,10 @@ public class Repuesto {
         this.estado = estado;
     }
 
-    // Constructor simplificado para relaciones
     public Repuesto(int idRepuesto) {
         this.idRepuesto = idRepuesto;
     }
 
-    // Getters y Setters
     public int getIdRepuesto() { return idRepuesto; }
     public void setIdRepuesto(int idRepuesto) { this.idRepuesto = idRepuesto; }
     public String getNombre() { return nombre; }
@@ -69,7 +66,6 @@ public class Repuesto {
     public EstadoRepuesto getEstado() { return estado; }
     public void setEstado(EstadoRepuesto estado) { this.estado = estado; }
 
-    // Enums
     public enum TipoRepuesto {
         Mecánico, Eléctrico, Carrocería, Consumo
     }

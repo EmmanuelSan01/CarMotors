@@ -77,7 +77,7 @@ public class InventoryController {
                 .collect(Collectors.toList());
     }
 
-    public void updateStockAfterServiceUse(List<Repuesto> usados) {
+    public void updateStockAfterServiceUse(List<Repuesto> usados) throws SQLException {
         for (Repuesto repuesto : usados) {
             dao.reducirStock(repuesto.getIdRepuesto(), repuesto.getCantidadStock()); // cantidad usada
         }

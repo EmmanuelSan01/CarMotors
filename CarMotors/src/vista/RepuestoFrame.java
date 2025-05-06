@@ -8,7 +8,11 @@ package vista;
  *
  * @author sebas
  */
+import dao.OrdenCompraDAO;
 import dao.RepuestoDAO;
+import model.OrdenCompra;
+import model.OrdenCompra.DetalleOrden;
+import model.OrdenCompra.EstadoOrden;
 import model.Proveedor;
 import model.Repuesto;
 import model.Repuesto.EstadoRepuesto;
@@ -23,11 +27,13 @@ import java.util.List;
 
 public class RepuestoFrame extends JFrame {
     private RepuestoDAO repuestoDAO;
+    private OrdenCompraDAO ordenCompraDAO;
     private JTable tablaRepuestos;
     private DefaultTableModel tableModel;
 
     public RepuestoFrame() {
         repuestoDAO = new RepuestoDAO();
+        ordenCompraDAO = new OrdenCompraDAO();
         initUI();
     }
 
@@ -37,10 +43,8 @@ public class RepuestoFrame extends JFrame {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Panel principal
         JPanel panel = new JPanel(new BorderLayout());
 
-        // Tabla de repuestos
         String[] columnas = {"ID", "Nombre", "Tipo", "Marca", "Modelo", "Stock", "Nivel Mínimo", "Estado"};
         tableModel = new DefaultTableModel(columnas, 0);
         tablaRepuestos = new JTable(tableModel);
@@ -49,19 +53,21 @@ public class RepuestoFrame extends JFrame {
         JScrollPane scrollPane = new JScrollPane(tablaRepuestos);
         panel.add(scrollPane, BorderLayout.CENTER);
 
-        // Panel de botones
         JPanel panelBotones = new JPanel();
         JButton btnAgregar = new JButton("Agregar Repuesto");
         JButton btnEditar = new JButton("Editar Repuesto");
         JButton btnEliminar = new JButton("Eliminar Repuesto");
+        JButton btnCrearOrden = new JButton("Crear Orden de Compra");
 
         btnAgregar.addActionListener(e -> mostrarFormularioAgregar());
         btnEditar.addActionListener(e -> mostrarFormularioEditar());
         btnEliminar.addActionListener(e -> eliminarRepuesto());
+        btnCrearOrden.addActionListener(e -> mostrarFormularioCrearOrden());
 
         panelBotones.add(btnAgregar);
         panelBotones.add(btnEditar);
         panelBotones.add(btnEliminar);
+        panelBotones.add(btnCrearOrden);
         panel.add(panelBotones, BorderLayout.SOUTH);
 
         add(panel);
@@ -129,7 +135,6 @@ public class RepuestoFrame extends JFrame {
         JButton btnGuardar = new JButton("Guardar");
         btnGuardar.addActionListener(e -> {
             try {
-                // Validar entradas
                 if (txtNombre.getText().trim().isEmpty()) {
                     throw new IllegalArgumentException("El nombre del repuesto es obligatorio.");
                 }
@@ -147,7 +152,7 @@ public class RepuestoFrame extends JFrame {
                 }
 
                 Repuesto repuesto = new Repuesto(
-                    0, // ID se genera automáticamente
+                    0,
                     txtNombre.getText(),
                     (TipoRepuesto) cmbTipo.getSelectedItem(),
                     (MarcaVehiculo) cmbMarca.getSelectedItem(),
@@ -195,10 +200,10 @@ public class RepuestoFrame extends JFrame {
                 JComboBox<MarcaVehiculo> cmbMarca = new JComboBox<>(MarcaVehiculo.values());
                 cmbMarca.setSelectedItem(tableModel.getValueAt(filaSeleccionada, 3));
                 JTextField txtModelo = new JTextField(tableModel.getValueAt(filaSeleccionada, 4) != null ? tableModel.getValueAt(filaSeleccionada, 4).toString() : "");
-                JTextField txtProveedorId = new JTextField("1"); // Simplificado
+                JTextField txtProveedorId = new JTextField("1");
                 JTextField txtStock = new JTextField(tableModel.getValueAt(filaSeleccionada, 5).toString());
                 JTextField txtNivelMinimo = new JTextField(tableModel.getValueAt(filaSeleccionada, 6).toString());
-                JTextField txtVidaUtil = new JTextField("12"); // Simplificado
+                JTextField txtVidaUtil = new JTextField("12");
                 JComboBox<EstadoRepuesto> cmbEstado = new JComboBox<>(EstadoRepuesto.values());
                 cmbEstado.setSelectedItem(tableModel.getValueAt(filaSeleccionada, 7));
 
@@ -224,7 +229,6 @@ public class RepuestoFrame extends JFrame {
                 JButton btnGuardar = new JButton("Guardar");
                 btnGuardar.addActionListener(e -> {
                     try {
-                        // Validar entradas
                         if (txtNombre.getText().trim().isEmpty()) {
                             throw new IllegalArgumentException("El nombre del repuesto es obligatorio.");
                         }
@@ -295,6 +299,63 @@ public class RepuestoFrame extends JFrame {
             }
         } else {
             JOptionPane.showMessageDialog(this, "Seleccione un repuesto para eliminar", "Advertencia", JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    private void mostrarFormularioCrearOrden() {
+        try {
+            List<Repuesto> repuestosBajoStock = repuestoDAO.obtenerRepuestosBajoStock();
+            if (repuestosBajoStock.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No hay repuestos con stock bajo.", "Información", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            JDialog dialog = new JDialog(this, "Crear Orden de Compra", true);
+            dialog.setSize(600, 400);
+            dialog.setLocationRelativeTo(this);
+            dialog.setLayout(new BorderLayout());
+
+            DefaultTableModel ordenModel = new DefaultTableModel(new String[]{"ID Repuesto", "Nombre", "Stock Actual", "Nivel Mínimo", "Cantidad a Comprar", "Precio Unitario"}, 0);
+            JTable tablaOrden = new JTable(ordenModel);
+            for (Repuesto rep : repuestosBajoStock) {
+                int cantidadComprar = rep.getNivelMinimo() * 2 - rep.getCantidadStock();
+                ordenModel.addRow(new Object[]{rep.getIdRepuesto(), rep.getNombre(), rep.getCantidadStock(), rep.getNivelMinimo(), cantidadComprar, 100.0});
+            }
+            JScrollPane scrollPane = new JScrollPane(tablaOrden);
+            dialog.add(scrollPane, BorderLayout.CENTER);
+
+            JPanel panelInferior = new JPanel();
+            JTextField txtProveedorId = new JTextField("1", 5);
+            panelInferior.add(new JLabel("ID Proveedor:"));
+            panelInferior.add(txtProveedorId);
+
+            JButton btnGuardar = new JButton("Crear Orden");
+            btnGuardar.addActionListener(e -> {
+                try {
+                    int idProveedor = Integer.parseInt(txtProveedorId.getText());
+                    OrdenCompra orden = new OrdenCompra(0, new Proveedor(idProveedor), LocalDate.now(), EstadoOrden.Pendiente);
+                    for (int i = 0; i < ordenModel.getRowCount(); i++) {
+                        int idRepuesto = (int) ordenModel.getValueAt(i, 0);
+                        int cantidad = (int) ordenModel.getValueAt(i, 4);
+                        double precio = (double) ordenModel.getValueAt(i, 5);
+                        orden.addDetalle(new DetalleOrden(0, new Repuesto(idRepuesto), cantidad, precio));
+                    }
+                    ordenCompraDAO.crearOrdenCompra(orden);
+                    cargarRepuestos();
+                    dialog.dispose();
+                    JOptionPane.showMessageDialog(this, "Orden de compra creada exitosamente");
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Error en ID de proveedor: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Error al crear orden: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            });
+            panelInferior.add(btnGuardar);
+            dialog.add(panelInferior, BorderLayout.SOUTH);
+
+            dialog.setVisible(true);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al verificar stock bajo: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

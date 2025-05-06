@@ -56,32 +56,29 @@ public class RepuestoDAO {
                     String estadoStr = rs.getString("estado");
                     String marcaStr = rs.getString("marca");
 
-                    // Validar y convertir tipo
                     TipoRepuesto tipo;
                     try {
                         tipo = TipoRepuesto.valueOf(tipoStr);
                     } catch (IllegalArgumentException e) {
                         System.err.println("Valor de tipo inválido: " + tipoStr);
-                        continue; // Saltar este registro
+                        continue;
                     }
 
-                    // Validar y convertir estado
                     EstadoRepuesto estado;
                     try {
                         estado = EstadoRepuesto.valueOf(estadoStr.replace(" ", "_"));
                     } catch (IllegalArgumentException e) {
                         System.err.println("Valor de estado inválido: " + estadoStr);
-                        continue; // Saltar este registro
+                        continue;
                     }
 
-                    // Validar y convertir marca
                     MarcaVehiculo marca = null;
                     if (marcaStr != null) {
                         try {
                             marca = MarcaVehiculo.valueOf(marcaStr);
                         } catch (IllegalArgumentException e) {
                             System.err.println("Valor de marca inválido: " + marcaStr);
-                            continue; // Saltar este registro
+                            continue;
                         }
                     }
 
@@ -166,7 +163,7 @@ public class RepuestoDAO {
         }
     }
 
-    public void reducirStock(int idRepuesto, int cantidadReducida) {
+    public void reducirStock(int idRepuesto, int cantidadReducida) throws SQLException {
         String sql = "UPDATE repuesto SET cantidad_stock = cantidad_stock - ? WHERE id_repuesto = ?";
         try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, cantidadReducida);
@@ -174,6 +171,64 @@ public class RepuestoDAO {
             stmt.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Error al reducir stock: " + e.getMessage());
+            throw e;
         }
+    }
+
+    public List<Repuesto> obtenerRepuestosBajoStock() throws SQLException {
+        List<Repuesto> repuestos = new ArrayList<>();
+        String sql = "SELECT * FROM repuesto WHERE cantidad_stock <= nivel_minimo";
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                String tipoStr = rs.getString("tipo");
+                String estadoStr = rs.getString("estado");
+                String marcaStr = rs.getString("marca");
+
+                TipoRepuesto tipo;
+                try {
+                    tipo = TipoRepuesto.valueOf(tipoStr);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Valor de tipo inválido: " + tipoStr);
+                    continue;
+                }
+
+                EstadoRepuesto estado;
+                try {
+                    estado = EstadoRepuesto.valueOf(estadoStr.replace(" ", "_"));
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Valor de estado inválido: " + estadoStr);
+                    continue;
+                }
+
+                MarcaVehiculo marca = null;
+                if (marcaStr != null) {
+                    try {
+                        marca = MarcaVehiculo.valueOf(marcaStr);
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Valor de marca inválido: " + marcaStr);
+                        continue;
+                    }
+                }
+
+                Repuesto repuesto = new Repuesto(
+                        rs.getInt("id_repuesto"),
+                        rs.getString("nombre"),
+                        tipo,
+                        marca,
+                        rs.getObject("modelo") != null ? rs.getInt("modelo") : null,
+                        new Proveedor(rs.getInt("id_proveedor")),
+                        rs.getInt("cantidad_stock"),
+                        rs.getInt("nivel_minimo"),
+                        rs.getDate("fecha_ingreso") != null ? rs.getDate("fecha_ingreso").toLocalDate() : null,
+                        rs.getInt("vida_util_meses"),
+                        estado
+                );
+                repuestos.add(repuesto);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al obtener repuestos con bajo stock: " + e.getMessage());
+            throw e;
+        }
+        return repuestos;
     }
 }

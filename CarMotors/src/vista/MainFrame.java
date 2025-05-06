@@ -23,11 +23,9 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Panel principal con 2 botones
         JPanel panel = new JPanel(new GridLayout(3, 1, 20, 20));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Botones
         JButton btnRegistros = new JButton("Registros");
         JButton btnGestion = new JButton("Gestión");
         JButton btnFacturas = new JButton("Facturas");
