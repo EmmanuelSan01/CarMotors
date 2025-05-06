@@ -6,6 +6,7 @@ package dao;
 
 import model.Servicio;
 import model.Servicio.EstadoServicio;
+import model.Servicio.TipoServicio;
 import model.Vehiculo;
 import model.Tecnico;
 import DatabaseConnection.DatabaseConnection;
@@ -29,7 +30,7 @@ public class ServicioDAO {
         String sql = "INSERT INTO servicio (tipo, id_vehiculo, id_tecnico, descripcion, tiempo_estimado, costo_manoobra, estado, fecha_inicio, fecha_fin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, servicio.getTipo());
+            stmt.setString(1, servicio.getTipo().name());
             stmt.setInt(2, servicio.getVehiculo().getIdVehiculo());
             stmt.setInt(3, servicio.getIdTecnico());
             stmt.setString(4, servicio.getDescripcion());
@@ -65,19 +66,18 @@ public class ServicioDAO {
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 try {
-                    String estadoStr = rs.getString("estado");
-                    System.out.println("Valor original de estado: '" + estadoStr + "' (length: " + estadoStr.length() + ")");
-                    System.out.println("Bytes de estado: " + toHex(estadoStr));
-                    estadoStr = estadoStr.trim();
-                    System.out.println("Valor después de trim: '" + estadoStr + "' (length: " + estadoStr.length() + ")");
+                    String estadoStr = rs.getString("estado").trim();
                     EstadoServicio estado = EstadoServicio.valueOf(estadoStr.toUpperCase().replace(" ", "_"));
+
+                    String tipoStr = rs.getString("tipo").trim();
+                    TipoServicio tipo = TipoServicio.valueOf(tipoStr.toUpperCase());
 
                     Tecnico tecnico = new Tecnico(rs.getInt("id_tecnico"));
                     tecnico.setNombre(rs.getString("tecnico_nombre"));
 
                     Servicio servicio = new Servicio(
                             rs.getInt("id_servicio"),
-                            rs.getString("tipo"),
+                            tipo,
                             new Vehiculo(rs.getInt("id_vehiculo")),
                             tecnico,
                             rs.getString("descripcion"),
@@ -88,6 +88,9 @@ public class ServicioDAO {
                             rs.getDate("fecha_fin") == null ? null : rs.getDate("fecha_fin").toLocalDate()
                     );
                     servicios.add(servicio);
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Valor inválido para servicio id_servicio " + rs.getInt("id_servicio") + ": " + e.getMessage());
+                    // Continuar con el siguiente registro en lugar de fallar
                 } catch (Exception e) {
                     System.err.println("Error al procesar registro de servicio id_servicio: " + rs.getInt("id_servicio") + ": " + e.getMessage());
                 }
@@ -104,14 +107,13 @@ public class ServicioDAO {
         String sql = "UPDATE servicio SET tipo = ?, id_vehiculo = ?, id_tecnico = ?, descripcion = ?, tiempo_estimado = ?, costo_manoobra = ?, estado = ?, fecha_inicio = ?, fecha_fin = ? WHERE id_servicio = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, servicio.getTipo());
+            stmt.setString(1, servicio.getTipo().name());
             stmt.setInt(2, servicio.getVehiculo().getIdVehiculo());
             stmt.setInt(3, servicio.getIdTecnico());
             stmt.setString(4, servicio.getDescripcion());
             stmt.setInt(5, servicio.getTiempoEstimado());
             stmt.setDouble(6, servicio.getCostoManoObra());
-            stmt.setString(7, servicio.getEstado().name().substring(0, 1).toUpperCase() +
-                servicio.getEstado().name().substring(1).toLowerCase().replace("_", " "));
+            stmt.setString(7, servicio.getEstado().name());
             stmt.setDate(8, java.sql.Date.valueOf(servicio.getFechaInicio()));
             if (servicio.getFechaFin() != null) {
                 stmt.setDate(9, java.sql.Date.valueOf(servicio.getFechaFin()));

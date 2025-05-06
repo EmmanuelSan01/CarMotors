@@ -12,7 +12,7 @@ import java.time.LocalDate;
 
 public class Servicio {
     private int idServicio;
-    private String tipo;
+    private TipoServicio tipo;
     private Vehiculo vehiculo;
     private int idTecnico;
     private Tecnico tecnico;
@@ -27,19 +27,22 @@ public class Servicio {
         PENDIENTE, EN_PROCESO, COMPLETADO, ENTREGADO
     }
 
+    public enum TipoServicio {
+        CORRECTIVO, PREVENTIVO
+    }
 
-     public Servicio(int idServicio) {
+    public Servicio(int idServicio) {
         this.idServicio = idServicio;
     }
 
     // Constructor completo
-     public Servicio(int idServicio, String tipo, Vehiculo vehiculo, Tecnico tecnico, String descripcion,
+    public Servicio(int idServicio, TipoServicio tipo, Vehiculo vehiculo, Tecnico tecnico, String descripcion,
             int tiempoEstimado, double costoManoObra, EstadoServicio estado,
             LocalDate fechaInicio, LocalDate fechaFin) {
         this.idServicio = idServicio;
         this.tipo = tipo;
         this.vehiculo = vehiculo;
-        this.idTecnico = tecnico.getIdTecnico(); // sincroniza con id
+        this.idTecnico = tecnico.getIdTecnico();
         this.tecnico = tecnico;
         this.descripcion = descripcion;
         this.tiempoEstimado = tiempoEstimado;
@@ -48,7 +51,8 @@ public class Servicio {
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
     }
-    public Servicio(int idServicio, String tipo, Vehiculo vehiculo, int idTecnico, String descripcion, 
+
+    public Servicio(int idServicio, TipoServicio tipo, Vehiculo vehiculo, int idTecnico, String descripcion, 
                     int tiempoEstimado, double costoManoObra, EstadoServicio estado, 
                     LocalDate fechaInicio, LocalDate fechaFin) {
         this.idServicio = idServicio;
@@ -66,23 +70,19 @@ public class Servicio {
     // Getters y Setters
     public int getIdServicio() { return idServicio; }
     public void setIdServicio(int idServicio) { this.idServicio = idServicio; }
-    public String getTipo() { return tipo; }
-    public void setTipo(String tipo) { this.tipo = tipo; }
+    public TipoServicio getTipo() { return tipo; }
+    public void setTipo(TipoServicio tipo) { this.tipo = tipo; }
     public Vehiculo getVehiculo() { return vehiculo; }
     public void setVehiculo(Vehiculo vehiculo) { this.vehiculo = vehiculo; }
     public int getIdTecnico() { return idTecnico; }
     public void setIdTecnico(int idTecnico) { this.idTecnico = idTecnico; }
-     public Tecnico getTecnico() {
-        return tecnico;
-    }
-
+    public Tecnico getTecnico() { return tecnico; }
     public void setTecnico(Tecnico tecnico) {
         this.tecnico = tecnico;
         if (tecnico != null) {
             this.idTecnico = tecnico.getIdTecnico();
         }
     }
-
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
     public int getTiempoEstimado() { return tiempoEstimado; }

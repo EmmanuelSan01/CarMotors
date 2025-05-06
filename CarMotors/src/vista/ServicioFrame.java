@@ -14,6 +14,8 @@ import dao.ServicioDAO;
 import model.Cliente;
 import model.Vehiculo;
 import model.Servicio;
+import model.Servicio.TipoServicio;
+import model.Servicio.EstadoServicio;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -79,7 +81,8 @@ public class ServicioFrame extends JFrame {
             for (Servicio servicio : servicios) {
                 tableModel.addRow(new Object[]{
                     servicio.getIdServicio(),
-                    servicio.getTipo(),
+                    servicio.getTipo() != null ? servicio.getTipo().name().substring(0, 1).toUpperCase() + 
+                    servicio.getTipo().name().substring(1).toLowerCase() : "Desconocido",
                     servicio.getVehiculo().getPlaca(),
                     servicio.getIdTecnico(),
                     servicio.getDescripcion(),
@@ -93,7 +96,7 @@ public class ServicioFrame extends JFrame {
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error al cargar servicios: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         } catch (IllegalArgumentException e) {
-            JOptionPane.showMessageDialog(this, "Error: Estado inválido en la base de datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error: Estado o tipo inválido en la base de datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -106,7 +109,18 @@ public class ServicioFrame extends JFrame {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JTextField txtTipo = new JTextField(20);
+        JComboBox<TipoServicio> cbTipo = new JComboBox<>(TipoServicio.values());
+        cbTipo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof TipoServicio) {
+                    TipoServicio tipo = (TipoServicio) value;
+                    setText(tipo.name().toLowerCase());
+                }
+                return this;
+            }
+        });
         JComboBox<Vehiculo> cbVehiculo = new JComboBox<>();
         JTextField txtIdTecnico = new JTextField(20);
         JTextArea txtDescripcion = new JTextArea(3, 20);
@@ -115,9 +129,8 @@ public class ServicioFrame extends JFrame {
         JTextField txtTiempoEstimado = new JTextField(20);
         JTextField txtCostoManoObra = new JTextField(20);
         JTextField txtFechaInicio = new JTextField(LocalDate.now().format(dateFormatter), 20);
-        JComboBox<Servicio.EstadoServicio> cbEstado = new JComboBox<>(Servicio.EstadoServicio.values());
+        JComboBox<EstadoServicio> cbEstado = new JComboBox<>(EstadoServicio.values());
 
-        // Cargar vehículos en el JComboBox
         try {
             List<Vehiculo> vehiculos = vehiculoDAO.obtenerVehiculos();
             if (vehiculos.isEmpty()) {
@@ -125,7 +138,6 @@ public class ServicioFrame extends JFrame {
                 dialog.dispose();
                 return;
             }
-            // Mostrar información detallada del vehículo en el JComboBox
             for (Vehiculo vehiculo : vehiculos) {
                 cbVehiculo.addItem(vehiculo);
             }
@@ -146,9 +158,8 @@ public class ServicioFrame extends JFrame {
             return;
         }
 
-        // Configurar GridBagConstraints para los campos
         gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST; dialog.add(new JLabel("Tipo:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 0; dialog.add(txtTipo, gbc);
+        gbc.gridx = 1; gbc.gridy = 0; dialog.add(cbTipo, gbc);
 
         gbc.gridx = 0; gbc.gridy = 1; dialog.add(new JLabel("Vehículo:"), gbc);
         gbc.gridx = 1; gbc.gridy = 1; dialog.add(cbVehiculo, gbc);
@@ -171,39 +182,32 @@ public class ServicioFrame extends JFrame {
         gbc.gridx = 0; gbc.gridy = 7; dialog.add(new JLabel("Estado:"), gbc);
         gbc.gridx = 1; gbc.gridy = 7; dialog.add(cbEstado, gbc);
 
-        // Botones
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton btnGuardar = new JButton("Guardar");
         JButton btnCancelar = new JButton("Cancelar");
 
         btnGuardar.addActionListener(e -> {
             try {
-                // Validar campos numéricos
                 int idTecnico = txtIdTecnico.getText().trim().isEmpty() ? 0 : Integer.parseInt(txtIdTecnico.getText().trim());
                 int tiempoEstimado = txtTiempoEstimado.getText().trim().isEmpty() ? 0 : Integer.parseInt(txtTiempoEstimado.getText().trim());
                 double costoManoObra = txtCostoManoObra.getText().trim().isEmpty() ? 0.0 : Double.parseDouble(txtCostoManoObra.getText().trim());
 
-                // Validar campos requeridos
-                if (txtTipo.getText().trim().isEmpty()) {
-                    JOptionPane.showMessageDialog(dialog, "El tipo de servicio es obligatorio.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
                 if (cbVehiculo.getSelectedItem() == null) {
                     JOptionPane.showMessageDialog(dialog, "Debe seleccionar un vehículo.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 Servicio servicio = new Servicio(
-                    0, // idServicio
-                    txtTipo.getText().trim(),
+                    0,
+                    (TipoServicio) cbTipo.getSelectedItem(),
                     (Vehiculo) cbVehiculo.getSelectedItem(),
                     idTecnico,
                     txtDescripcion.getText().trim(),
                     tiempoEstimado,
                     costoManoObra,
-                    (Servicio.EstadoServicio) cbEstado.getSelectedItem(),
+                    (EstadoServicio) cbEstado.getSelectedItem(),
                     LocalDate.parse(txtFechaInicio.getText(), dateFormatter),
-                    null // fechaFin
+                    null
                 );
                 servicioDAO.agregarServicio(servicio);
                 cargarServicios();
@@ -234,14 +238,26 @@ public class ServicioFrame extends JFrame {
         if (filaSeleccionada >= 0) {
             int idServicio = (int) tableModel.getValueAt(filaSeleccionada, 0);
             JDialog dialog = new JDialog(this, "Editar Servicio", true);
-            dialog.setSize(400, 500);
+            dialog.setSize(400, 550);
             dialog.setLocationRelativeTo(this);
             dialog.setLayout(new GridBagLayout());
             GridBagConstraints gbc = new GridBagConstraints();
             gbc.insets = new Insets(5, 5, 5, 5);
             gbc.fill = GridBagConstraints.HORIZONTAL;
 
-            JTextField txtTipo = new JTextField((String) tableModel.getValueAt(filaSeleccionada, 1), 20);
+            JComboBox<TipoServicio> cbTipo = new JComboBox<>(TipoServicio.values());
+            cbTipo.setSelectedItem(TipoServicio.valueOf(normalizeTipo((String) tableModel.getValueAt(filaSeleccionada, 1))));
+            cbTipo.setRenderer(new DefaultListCellRenderer() {
+                @Override
+                public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                    super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                    if (value instanceof TipoServicio) {
+                        TipoServicio tipo = (TipoServicio) value;
+                        setText(tipo.name().toLowerCase());
+                    }
+                    return this;
+                }
+            });
             JComboBox<Vehiculo> cbVehiculo = new JComboBox<>();
             JTextField txtIdTecnico = new JTextField(tableModel.getValueAt(filaSeleccionada, 3).toString(), 20);
             JTextArea txtDescripcion = new JTextArea((String) tableModel.getValueAt(filaSeleccionada, 4), 3, 20);
@@ -250,8 +266,9 @@ public class ServicioFrame extends JFrame {
             JTextField txtTiempoEstimado = new JTextField(tableModel.getValueAt(filaSeleccionada, 5).toString(), 20);
             JTextField txtCostoManoObra = new JTextField(tableModel.getValueAt(filaSeleccionada, 6).toString(), 20);
             JTextField txtFechaInicio = new JTextField((String) tableModel.getValueAt(filaSeleccionada, 8), 20);
-            JComboBox<Servicio.EstadoServicio> cbEstado = new JComboBox<>(Servicio.EstadoServicio.values());
-            cbEstado.setSelectedItem(Servicio.EstadoServicio.valueOf(normalizeEstado((String) tableModel.getValueAt(filaSeleccionada, 7))));
+            JTextField txtFechaFin = new JTextField((String) tableModel.getValueAt(filaSeleccionada, 9), 20); // Nuevo campo Fecha Fin
+            JComboBox<EstadoServicio> cbEstado = new JComboBox<>(EstadoServicio.values());
+            cbEstado.setSelectedItem(EstadoServicio.valueOf(normalizeEstado((String) tableModel.getValueAt(filaSeleccionada, 7))));
 
             try {
                 List<Vehiculo> vehiculos = vehiculoDAO.obtenerVehiculos();
@@ -260,7 +277,6 @@ public class ServicioFrame extends JFrame {
                     dialog.dispose();
                     return;
                 }
-                // Mostrar información detallada del vehículo en el JComboBox
                 for (Vehiculo vehiculo : vehiculos) {
                     cbVehiculo.addItem(vehiculo);
                 }
@@ -284,9 +300,8 @@ public class ServicioFrame extends JFrame {
                 return;
             }
 
-            // Configurar GridBagConstraints para los campos
             gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST; dialog.add(new JLabel("Tipo:"), gbc);
-            gbc.gridx = 1; gbc.gridy = 0; dialog.add(txtTipo, gbc);
+            gbc.gridx = 1; gbc.gridy = 0; dialog.add(cbTipo, gbc);
 
             gbc.gridx = 0; gbc.gridy = 1; dialog.add(new JLabel("Vehículo:"), gbc);
             gbc.gridx = 1; gbc.gridy = 1; dialog.add(cbVehiculo, gbc);
@@ -306,45 +321,45 @@ public class ServicioFrame extends JFrame {
             gbc.gridx = 0; gbc.gridy = 6; dialog.add(new JLabel("Fecha Inicio (yyyy-MM-dd):"), gbc);
             gbc.gridx = 1; gbc.gridy = 6; dialog.add(txtFechaInicio, gbc);
 
-            gbc.gridx = 0; gbc.gridy = 7; dialog.add(new JLabel("Estado:"), gbc);
-            gbc.gridx = 1; gbc.gridy = 7; dialog.add(cbEstado, gbc);
+            gbc.gridx = 0; gbc.gridy = 7; dialog.add(new JLabel("Fecha Fin (yyyy-MM-dd, opcional):"), gbc);
+            gbc.gridx = 1; gbc.gridy = 7; dialog.add(txtFechaFin, gbc);
 
-            // Botones
+            gbc.gridx = 0; gbc.gridy = 8; dialog.add(new JLabel("Estado:"), gbc);
+            gbc.gridx = 1; gbc.gridy = 8; dialog.add(cbEstado, gbc);
+
             JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER));
             JButton btnGuardar = new JButton("Guardar");
             JButton btnCancelar = new JButton("Cancelar");
 
             btnGuardar.addActionListener(e -> {
                 try {
-                    // Validar campos numéricos
                     int idTecnico = txtIdTecnico.getText().trim().isEmpty() ? 0 : Integer.parseInt(txtIdTecnico.getText().trim());
                     int tiempoEstimado = txtTiempoEstimado.getText().trim().isEmpty() ? 0 : Integer.parseInt(txtTiempoEstimado.getText().trim());
                     double costoManoObra = txtCostoManoObra.getText().trim().isEmpty() ? 0.0 : Double.parseDouble(txtCostoManoObra.getText().trim());
 
-                    // Validar campos requeridos
-                    if (txtTipo.getText().trim().isEmpty()) {
-                        JOptionPane.showMessageDialog(dialog, "El tipo de servicio es obligatorio.", "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
                     if (cbVehiculo.getSelectedItem() == null) {
                         JOptionPane.showMessageDialog(dialog, "Debe seleccionar un vehículo.", "Error", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
 
-                    LocalDate fechaFin = tableModel.getValueAt(filaSeleccionada, 9).equals("") ? null : LocalDate.parse((String) tableModel.getValueAt(filaSeleccionada, 9), dateFormatter);
+                    LocalDate fechaFin = null;
+                    if (!txtFechaFin.getText().trim().isEmpty()) {
+                        fechaFin = LocalDate.parse(txtFechaFin.getText(), dateFormatter);
+                    }
+
                     Servicio servicio = new Servicio(
                         idServicio,
-                        txtTipo.getText().trim(),
+                        (TipoServicio) cbTipo.getSelectedItem(),
                         (Vehiculo) cbVehiculo.getSelectedItem(),
                         idTecnico,
                         txtDescripcion.getText().trim(),
                         tiempoEstimado,
                         costoManoObra,
-                        (Servicio.EstadoServicio) cbEstado.getSelectedItem(),
+                        (EstadoServicio) cbEstado.getSelectedItem(),
                         LocalDate.parse(txtFechaInicio.getText(), dateFormatter),
                         fechaFin
                     );
-                    if (servicio.getEstado() == Servicio.EstadoServicio.COMPLETADO&& servicio.getFechaFin() == null) {
+                    if (servicio.getEstado() == EstadoServicio.COMPLETADO && servicio.getFechaFin() == null) {
                         servicio.setFechaFin(LocalDate.now());
                     }
                     servicioDAO.actualizarServicio(servicio);
@@ -365,7 +380,7 @@ public class ServicioFrame extends JFrame {
             panelBotones.add(btnGuardar);
             panelBotones.add(btnCancelar);
 
-            gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
+            gbc.gridx = 0; gbc.gridy = 9; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
             dialog.add(panelBotones, gbc);
 
             dialog.setVisible(true);
@@ -401,8 +416,7 @@ public class ServicioFrame extends JFrame {
 
         JTabbedPane tabbedPane = new JTabbedPane();
 
-        // Crear pestañas para cada estado
-        for (Servicio.EstadoServicio estado : Servicio.EstadoServicio.values()) {
+        for (EstadoServicio estado : EstadoServicio.values()) {
             JPanel panelEstado = new JPanel(new BorderLayout());
             DefaultTableModel tableModelEstado = new DefaultTableModel(
                 new String[]{"ID Servicio", "Tipo", "Vehículo", "ID Técnico", "Descripción", "Fecha Inicio", "Fecha Fin"}, 0
@@ -412,14 +426,14 @@ public class ServicioFrame extends JFrame {
             panelEstado.add(scrollPane, BorderLayout.CENTER);
             tabbedPane.addTab(estado.name().replace("_", " "), panelEstado);
 
-            // Cargar servicios por estado
             try {
                 List<Servicio> servicios = servicioDAO.obtenerServicios();
                 for (Servicio servicio : servicios) {
                     if (servicio.getEstado() == estado) {
                         tableModelEstado.addRow(new Object[]{
                             servicio.getIdServicio(),
-                            servicio.getTipo(),
+                            servicio.getTipo() != null ? servicio.getTipo().name().substring(0, 1).toUpperCase() + 
+                            servicio.getTipo().name().substring(1).toLowerCase() : "Desconocido",
                             servicio.getVehiculo().getPlaca(),
                             servicio.getIdTecnico(),
                             servicio.getDescripcion(),
@@ -431,7 +445,7 @@ public class ServicioFrame extends JFrame {
             } catch (SQLException e) {
                 JOptionPane.showMessageDialog(this, "Error al cargar servicios: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             } catch (IllegalArgumentException e) {
-                JOptionPane.showMessageDialog(this, "Error: Estado inválido en la base de datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Error: Estado o tipo inválido en la base de datos: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
 
@@ -440,7 +454,12 @@ public class ServicioFrame extends JFrame {
     }
 
     private String normalizeEstado(String estado) {
-        if (estado == null) return "Pendiente";
+        if (estado == null) return "PENDIENTE";
         return estado.trim().toUpperCase().replace(" ", "_");
+    }
+
+    private String normalizeTipo(String tipo) {
+        if (tipo == null) return "CORRECTIVO";
+        return tipo.trim().toUpperCase();
     }
 }
